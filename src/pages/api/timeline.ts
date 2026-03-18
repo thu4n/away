@@ -14,14 +14,31 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(null, { status: 302, headers: { Location: `/trip/${trip_id}` } });
   }
 
-  // Create
   const day_number = data.get('day_number');
   const time_mark = data.get('time_mark');
   const title = data.get('title');
   const maps_url = data.get('maps_url');
   const description = data.get('description');
-  
+
+  if (action === 'edit') {
+    const id = data.get('id');
+    if (!id || !trip_id || !day_number || !time_mark || !title) {
+      return new Response('Missing required fields', { status: 400 });
+    }
+
+    const { success } = await db.prepare(
+      'UPDATE timeline_items SET day_number = ?, time_mark = ?, title = ?, maps_url = ?, description = ? WHERE id = ?'
+    ).bind(day_number, time_mark, title, maps_url || null, description || null, id).run();
+
+    if (success) {
+      return new Response(null, { status: 302, headers: { Location: `/trip/${trip_id}` } });
+    }
+    return new Response('Error updating timeline item', { status: 500 });
+  }
+
+  // Create
   if (!trip_id || !day_number || !time_mark || !title) {
+
     return new Response('Missing required fields', { status: 400 });
   }
 

@@ -26,7 +26,28 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(null, { status: 302, headers: { Location: '/' } });
   }
 
+  if (action === 'edit') {
+    const id = data.get('id');
+    const name = data.get('name');
+    const start_date = data.get('start_date');
+    const end_date = data.get('end_date');
+    
+    if (!id || !name || !start_date || !end_date) {
+      return new Response('Missing fields', { status: 400 });
+    }
+
+    const { success } = await db.prepare('UPDATE trips SET name = ?, start_date = ?, end_date = ? WHERE id = ?')
+      .bind(name, start_date, end_date, id)
+      .run();
+
+    if (success) {
+      return new Response(null, { status: 302, headers: { Location: '/' } });
+    }
+    return new Response('Error updating trip', { status: 500 });
+  }
+
   // Create
+
   const name = data.get('name');
   const start_date = data.get('start_date');
   const end_date = data.get('end_date');

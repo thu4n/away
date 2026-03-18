@@ -4,6 +4,14 @@ import { env } from 'cloudflare:workers';
 
 const db = (env as any).DB;
 const { results: trips } = await db.prepare('SELECT * FROM trips ORDER BY start_date ASC').all();
+
+const formatDate = (date: string | Date) => {
+  const d = new Date(date);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+};
 ---
 
 <Layout title="Away - Your Trips">
@@ -21,18 +29,22 @@ const { results: trips } = await db.prepare('SELECT * FROM trips ORDER BY start_
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span>{new Date(trip.start_date).toLocaleDateString()} - {new Date(trip.end_date).toLocaleDateString()}</span>
+            <span>{formatDate(trip.start_date)} - {formatDate(trip.end_date)}</span>
           </div>
           
-          <form method="POST" action="/api/trips" class="absolute top-4 right-4 z-10" onsubmit="return confirm('Delete this trip?');">
-            <input type="hidden" name="action" value="delete" />
-            <input type="hidden" name="id" value={trip.id} />
-            <button type="submit" class="p-2 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" aria-label="Delete Trip">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </form>
+          <button
+            class="edit-trip-btn absolute top-4 right-4 z-10 p-2 text-gray-400 hover:text-blue-500 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            aria-label="Edit Trip"
+            onclick="event.preventDefault();"
+            data-id={trip.id}
+            data-name={trip.name}
+            data-start={trip.start_date}
+            data-end={trip.end_date}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
         </a>
       ))}
     </div>
@@ -60,5 +72,71 @@ const { results: trips } = await db.prepare('SELECT * FROM trips ORDER BY start_
         </button>
       </form>
     </div>
+
+    <!-- Edit Trip Dialog -->
+    <dialog id="edit-trip-dialog" class="m-0 mt-auto w-full max-w-md mx-auto rounded-t-3xl p-6 bg-white dark:bg-slate-800 shadow-2xl border-0 backdrop:bg-black/40 backdrop:backdrop-blur-sm">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Edit Trip</h3>
+        <button id="close-edit-trip" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form id="edit-trip-form" method="POST" action="/api/trips" class="space-y-4">
+        <input type="hidden" name="action" id="edit-trip-action" value="edit" />
+        <input type="hidden" name="id" id="edit-trip-id" />
+        
+        <div>
+          <label for="edit-name" class="block text-xs font-medium text-gray-500 mb-1">Destination / Name</label>
+          <input type="text" name="name" id="edit-name" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-4 py-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="edit-start" class="block text-xs font-medium text-gray-500 mb-1">Start Date</label>
+            <input type="date" name="start_date" id="edit-start" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-4 py-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" />
+          </div>
+          <div>
+            <label for="edit-end" class="block text-xs font-medium text-gray-500 mb-1">End Date</label>
+            <input type="date" name="end_date" id="edit-end" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-4 py-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" />
+          </div>
+        </div>
+        
+        <div class="pt-4 flex flex-col gap-2">
+          <button type="submit" onclick="document.getElementById('edit-trip-action').value='edit'; return confirm('Save these changes?');" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all">Save Changes</button>
+          <button type="submit" onclick="document.getElementById('edit-trip-action').value='delete'; return confirm('Permanently delete this entire trip and all its contents?');" class="w-full py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 active:scale-[0.98] transition-all">Delete Trip</button>
+        </div>
+      </form>
+    </dialog>
   </div>
+
+  <script>
+    const editDialog = document.getElementById('edit-trip-dialog') as HTMLDialogElement;
+    const closeBtn = document.getElementById('close-edit-trip');
+    
+    if (closeBtn && editDialog) {
+      closeBtn.addEventListener('click', () => editDialog.close());
+      editDialog.addEventListener('click', (e) => { if (e.target === editDialog) editDialog.close(); });
+    }
+
+    document.querySelectorAll('.edit-trip-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        // Find inputs
+        const idInput = document.getElementById('edit-trip-id') as HTMLInputElement;
+        const nameInput = document.getElementById('edit-name') as HTMLInputElement;
+        const startInput = document.getElementById('edit-start') as HTMLInputElement;
+        const endInput = document.getElementById('edit-end') as HTMLInputElement;
+
+        // Get data
+        const target = e.currentTarget as HTMLButtonElement;
+        idInput.value = target.dataset.id || '';
+        nameInput.value = target.dataset.name || '';
+        startInput.value = target.dataset.start || '';
+        endInput.value = target.dataset.end || '';
+
+        editDialog?.showModal();
+      });
+    });
+  </script>
 </Layout>
+

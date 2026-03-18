@@ -25,5 +25,6 @@ CREATE TABLE expenses (
     timeline_item_id INTEGER REFERENCES timeline_items(id) ON DELETE SET NULL,
     amount REAL NOT NULL,
     description TEXT NOT NULL,
-    expense_date DATE NOT NULL
+    expense_date DATE NOT NULL,
+    image_key TEXT
 );

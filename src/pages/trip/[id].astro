@@ -17,6 +17,14 @@ const currentTab = url.searchParams.get('tab') || 'timeline';
 const { results: timelineItems } = await db.prepare('SELECT * FROM timeline_items WHERE trip_id = ? ORDER BY day_number ASC, time_mark ASC').bind(id).all();
 const { results: expenses } = await db.prepare('SELECT * FROM expenses WHERE trip_id = ? ORDER BY expense_date DESC').bind(id).all();
 
+const formatDate = (date: string | Date) => {
+  const d = new Date(date);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 // Calculate all days of the trip
 const startDate = new Date(tripResult.start_date);
 const endDate = new Date(tripResult.end_date);
@@ -27,11 +35,9 @@ const allDayTabs = Array.from({ length: diffDays }, (_, i) => {
   const dayNum = i + 1;
   const d = new Date(startDate);
   d.setDate(startDate.getDate() + i);
-  const day = d.getDate().toString().padStart(2, '0');
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
   return {
     number: dayNum,
-    label: `Day ${dayNum} - ${day}/${month}`
+    label: `Day ${dayNum} - ${formatDate(d)}`
   };
 });
 
@@ -127,23 +133,25 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
         <div class="relative pl-6 border-l-2 border-indigo-100 dark:border-slate-700 space-y-6 ml-4">
           {activeDayItems.map((item: any) => (
             <div class="relative">
-              <!-- Timeline dot -->
-              <div class="absolute w-4 h-4 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full -left-[1.35rem] top-1 shadow ring-4 ring-white dark:ring-slate-900"></div>
-              
-              <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700">
+              <div class="group bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700">
                 <div class="flex justify-between items-start mb-2">
                   <span class="text-xs font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md">{item.time_mark}</span>
                   
-                  <form method="POST" action="/api/timeline" onsubmit="return confirm('Delete event?');">
-                    <input type="hidden" name="action" value="delete" />
-                    <input type="hidden" name="id" value={item.id} />
-                    <input type="hidden" name="trip_id" value={id} />
-                    <button class="text-gray-300 hover:text-red-500 transition-colors">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  <div class="flex gap-2 items-center">
+                    <button
+                      class="edit-event-btn p-2 text-gray-400 hover:text-blue-500 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                      data-id={item.id}
+                      data-day={item.day_number}
+                      data-time={item.time_mark}
+                      data-title={item.title}
+                      data-url={item.maps_url || ''}
+                      data-desc={item.description || ''}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                       </svg>
                     </button>
-                  </form>
+                  </div>
                 </div>
                 <h3 class="font-bold text-gray-900 dark:text-white text-lg">{item.title}</h3>
                 {item.description && <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">{item.description}</p>}
@@ -216,7 +224,62 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
     </dialog>
   )}
 
+  <!-- EDIT EVENT DIALOG (timeline tab) -->
+  {currentTab === 'timeline' && (
+    <dialog id="edit-event-dialog" class="m-0 mt-auto w-full max-w-md mx-auto rounded-t-3xl p-6 bg-white dark:bg-slate-800 shadow-2xl border-0 backdrop:bg-black/40 backdrop:backdrop-blur-sm">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Edit Event</h3>
+        <button id="close-edit-event" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form method="POST" action="/api/timeline" class="space-y-4">
+        <input type="hidden" name="action" id="edit-event-action" value="edit" />
+        <input type="hidden" name="trip_id" value={id} />
+        <input type="hidden" name="id" id="edit-event-id" />
+        
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Day Number</label>
+            <select name="day_number" id="edit-event-day" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+              {allDayTabs.map(day => (
+                <option value={day.number}>{day.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Time Mark</label>
+            <input type="text" name="time_mark" id="edit-event-time" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm" placeholder="10:00 AM" />
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Title</label>
+          <input type="text" name="title" id="edit-event-title" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm" placeholder="Flight to Tokyo" />
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Google Maps URL <span class="text-gray-400">(optional)</span></label>
+          <input type="url" name="maps_url" id="edit-event-url" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm" placeholder="https://maps.google.com/..." />
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Notes <span class="text-gray-400">(optional)</span></label>
+          <textarea name="description" id="edit-event-desc" rows="2" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm resize-none"></textarea>
+        </div>
+        
+        <div class="pt-4 flex flex-col gap-2">
+          <button type="submit" onclick="document.getElementById('edit-event-action').value='edit'; return confirm('Save changes to this event?');" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all">Save Changes</button>
+          <button type="submit" onclick="document.getElementById('edit-event-action').value='delete'; return confirm('Remove this event from your timeline?');" class="w-full py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 active:scale-[0.98] transition-all">Delete Event</button>
+        </div>
+      </form>
+    </dialog>
+  )}
+
   <script>
+
     function wireDialog(openId: string, closeId: string, dialogId: string) {
       const openBtn = document.getElementById(openId);
       const closeBtn = document.getElementById(closeId);
@@ -228,6 +291,26 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
     }
     wireDialog('open-add-event',   'close-add-event',   'add-event-dialog');
     wireDialog('open-add-expense', 'close-add-expense', 'add-expense-dialog');
+
+    // Edit Event wiring
+    const editEventDialog = document.getElementById('edit-event-dialog');
+    const closeEditEventBtn = document.getElementById('close-edit-event');
+    if (closeEditEventBtn && editEventDialog) {
+      closeEditEventBtn.addEventListener('click', () => (editEventDialog as any).close());
+      editEventDialog.addEventListener('click', (e) => { if (e.target === editEventDialog) (editEventDialog as any).close(); });
+    }
+    document.querySelectorAll('.edit-event-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.currentTarget as HTMLButtonElement;
+        (document.getElementById('edit-event-id') as HTMLInputElement).value = target.dataset.id || '';
+        (document.getElementById('edit-event-day') as HTMLInputElement).value = target.dataset.day || '';
+        (document.getElementById('edit-event-time') as HTMLInputElement).value = target.dataset.time || '';
+        (document.getElementById('edit-event-title') as HTMLInputElement).value = target.dataset.title || '';
+        (document.getElementById('edit-event-url') as HTMLInputElement).value = target.dataset.url || '';
+        (document.getElementById('edit-event-desc') as HTMLTextAreaElement).value = target.dataset.desc || '';
+        (editEventDialog as any)?.showModal();
+      });
+    });
   </script>
 
   <!-- EXPENSES TAB -->
@@ -237,7 +320,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
       <!-- Ledger Summary -->
       <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-lg overflow-hidden relative">
         <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10 blur-2xl"></div>
-        <h2 class="text-indigo-100 font-medium text-sm">{filterDate ? `Spending — ${new Date(filterDate).toLocaleDateString()}` : 'Total Expenses'}</h2>
+        <h2 class="text-indigo-100 font-medium text-sm">{filterDate ? `Spending — ${formatDate(filterDate)}` : 'Total Expenses'}</h2>
         <div class="text-4xl font-extrabold mt-1">{formatCurrency(displayExpenses.reduce((acc: number, e: any) => acc + e.amount, 0))}</div>
       </div>
 
@@ -260,7 +343,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
                   ? 'bg-indigo-600 text-white border-indigo-600'
                   : 'bg-white dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700'
               }`}
-            >{new Date(d).toLocaleDateString()}</a>
+            >{formatDate(d)}</a>
           ))}
         </div>
       )}
@@ -273,25 +356,42 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
           <ul class="divide-y divide-gray-100 dark:divide-slate-700">
             {displayExpenses.map((exp: any) => (
               <li class="p-4 flex justify-between items-center group">
-                <div class="flex-1">
-                  <div class="font-bold text-gray-900 dark:text-white">{exp.description}</div>
-                  <div class="text-xs text-gray-500 mt-1 flex items-center gap-2">
-                    <span>{new Date(exp.expense_date).toLocaleDateString()}</span>
-                    {exp.timeline_item_id && timelineItemById[exp.timeline_item_id] && (
-                      <span class="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 px-1.5 py-0.5 rounded text-[10px] font-semibold">
-                        📍 {timelineItemById[exp.timeline_item_id].title}
-                      </span>
-                    )}
+                <div class="flex items-start gap-4 flex-1">
+                  {exp.image_key && (
+                    <a href={`/api/images/${exp.image_key}`} target="_blank" class="shrink-0 group/img relative overflow-hidden rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm block">
+                      <img src={`/api/images/${exp.image_key}`} alt="Proof" class="w-14 h-14 object-cover transition-transform group-hover/img:scale-110" />
+                      <div class="absolute inset-0 bg-black/5 group-hover/img:bg-transparent transition-colors"></div>
+                    </a>
+                  )}
+                  <div class="flex-1 min-w-0">
+                    <div class="font-bold text-gray-900 dark:text-white truncate">{exp.description}</div>
+                    <div class="text-xs text-gray-500 mt-1 flex flex-wrap items-center gap-2">
+                      <span class="whitespace-nowrap">{formatDate(exp.expense_date)}</span>
+                      {exp.timeline_item_id && timelineItemById[exp.timeline_item_id] && (
+                        <span class="bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300 px-1.5 py-0.5 rounded text-[10px] font-semibold truncate max-w-[150px]">
+                          📍 {timelineItemById[exp.timeline_item_id].title}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div class="text-right">
-                  <div class="font-bold text-lg text-gray-900 dark:text-white">{formatCurrency(exp.amount)}</div>
-                  <form method="POST" action="/api/expenses" class="inline" onsubmit="return confirm('Delete expense?');">
-                    <input type="hidden" name="action" value="delete" />
-                    <input type="hidden" name="id" value={exp.id} />
-                    <input type="hidden" name="trip_id" value={id} />
-                    <button class="text-xs text-red-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">Delete</button>
-                  </form>
+                  <div class="font-bold text-lg text-gray-900 dark:text-white mb-2">{formatCurrency(exp.amount)}</div>
+                  <div class="flex gap-2 justify-end transition-opacity">
+                    <button
+                      class="edit-expense-btn p-2 text-gray-400 hover:text-blue-500 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                      data-id={exp.id}
+                      data-amount={exp.amount}
+                      data-date={exp.expense_date.split('T')[0]}
+                      data-desc={exp.description}
+                      data-timeline={exp.timeline_item_id || ''}
+                      data-image={exp.image_key || ''}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </li>
             ))}
@@ -312,7 +412,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
           </svg>
         </button>
       </div>
-      <form method="POST" action="/api/expenses" class="space-y-4">
+      <form method="POST" action="/api/expenses" enctype="multipart/form-data" class="space-y-4">
         <input type="hidden" name="trip_id" value={id} />
         
         <div class="flex gap-3">
@@ -345,9 +445,120 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
             ))}
           </select>
         </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Proof Image <span class="text-gray-400">(optional)</span></label>
+          <input type="file" name="proof_image" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 dark:file:bg-green-900/30 dark:file:text-green-400 dark:hover:file:bg-green-900/50 transition-all cursor-pointer border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700/50" />
+        </div>
         
         <button type="submit" class="w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 active:scale-[0.98] transition-all">Save Expense</button>
       </form>
     </dialog>
   )}
+
+  <!-- EDIT EXPENSE DIALOG -->
+  {currentTab === 'expenses' && (
+    <dialog id="edit-expense-dialog" class="m-0 mt-auto w-full max-w-md mx-auto rounded-t-3xl p-6 bg-white dark:bg-slate-800 shadow-2xl border-0 backdrop:bg-black/40 backdrop:backdrop-blur-sm">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Edit Expense</h3>
+        <button id="close-edit-expense" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form method="POST" action="/api/expenses" enctype="multipart/form-data" class="space-y-4">
+        <input type="hidden" name="trip_id" value={id} />
+        <input type="hidden" name="action" id="edit-expense-action" value="edit" />
+        <input type="hidden" name="id" id="edit-expense-id" />
+        <input type="hidden" name="image_key" id="edit-expense-image" />
+        
+        <div class="flex gap-3">
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Amount</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span class="text-gray-500 font-medium">₫</span>
+              </div>
+              <input type="number" step="1000" inputmode="numeric" name="amount" id="edit-expense-amount" required class="block w-full pl-7 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all font-medium text-lg" placeholder="0" />
+            </div>
+          </div>
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Date</label>
+            <input type="date" name="expense_date" id="edit-expense-date" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 px-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all text-sm" />
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Description</label>
+          <input type="text" name="description" id="edit-expense-desc" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all text-sm" placeholder="Dinner at local market" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Link to Timeline Event <span class="text-gray-400">(optional)</span></label>
+          <select name="timeline_item_id" id="edit-expense-timeline" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all text-sm">
+            <option value="">None</option>
+            {timelineItems.map((item: any) => (
+              <option value={item.id}>Day {item.day_number} · {item.time_mark} — {item.title}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Proof Image <span class="text-gray-400">(optional)</span></label>
+          <div id="edit-expense-image-preview" class="hidden mb-2">
+            <a href="#" target="_blank" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-gray-100 text-gray-700 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 dark:text-gray-200 rounded-lg transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              View Current Image
+            </a>
+          </div>
+          <input type="file" name="proof_image" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-400 dark:hover:file:bg-blue-900/50 transition-all cursor-pointer border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700/50" />
+          <p class="text-[10px] text-gray-400 mt-1 pl-1">Uploading a new image will replace the current one.</p>
+        </div>
+        
+        <div class="pt-4 flex flex-col gap-2">
+          <button type="submit" onclick="document.getElementById('edit-expense-action').value='edit'; return confirm('Save expense changes?');" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all">Save Changes</button>
+          <button type="submit" onclick="document.getElementById('edit-expense-action').value='delete'; return confirm('Remove this expense record?');" class="w-full py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 active:scale-[0.98] transition-all">Delete Expense</button>
+        </div>
+      </form>
+    </dialog>
+  )}
+
+  <script>
+    // Edit Expense wiring
+    const editExpenseDialog = document.getElementById('edit-expense-dialog');
+    const closeEditExpenseBtn = document.getElementById('close-edit-expense');
+    if (closeEditExpenseBtn && editExpenseDialog) {
+       closeEditExpenseBtn.addEventListener('click', () => (editExpenseDialog as any).close());
+       editExpenseDialog.addEventListener('click', (e) => { if (e.target === editExpenseDialog) (editExpenseDialog as any).close(); });
+    }
+    document.querySelectorAll('.edit-expense-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.currentTarget as HTMLButtonElement;
+        (document.getElementById('edit-expense-id') as HTMLInputElement).value = target.dataset.id || '';
+        (document.getElementById('edit-expense-amount') as HTMLInputElement).value = target.dataset.amount || '';
+        (document.getElementById('edit-expense-date') as HTMLInputElement).value = target.dataset.date || '';
+        (document.getElementById('edit-expense-desc') as HTMLInputElement).value = target.dataset.desc || '';
+        (document.getElementById('edit-expense-timeline') as unknown as HTMLSelectElement).value = target.dataset.timeline || '';
+
+        const imageKey = target.dataset.image || '';
+        (document.getElementById('edit-expense-image') as HTMLInputElement).value = imageKey;
+        
+        const previewDiv = document.getElementById('edit-expense-image-preview');
+        if (previewDiv) {
+          if (imageKey) {
+            previewDiv.classList.remove('hidden');
+            const link = previewDiv.querySelector('a');
+            if (link) link.href = '/api/images/' + imageKey;
+          } else {
+            previewDiv.classList.add('hidden');
+          }
+        }
+
+        (editExpenseDialog as any)?.showModal();
+      });
+    });
+  </script>
 </Layout>
