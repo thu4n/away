@@ -1,52 +1,91 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { env } from 'cloudflare:workers';
+import Layout from "../layouts/Layout.astro";
+import { env } from "cloudflare:workers";
 
 const db = (env as any).DB;
-const { results: trips } = await db.prepare('SELECT * FROM trips ORDER BY start_date ASC').all();
+const { results: trips } = await db
+  .prepare("SELECT * FROM trips ORDER BY start_date ASC")
+  .all();
 
 const formatDate = (date: string | Date) => {
   const d = new Date(date);
-  const day = d.getDate().toString().padStart(2, '0');
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const day = d.getDate().toString().padStart(2, "0");
+  const month = (d.getMonth() + 1).toString().padStart(2, "0");
   const year = d.getFullYear();
   return `${day}/${month}/${year}`;
 };
 ---
 
-<Layout title="Away - Your Trips">
+<Layout title="Away">
   <div class="space-y-6">
     <header class="pt-6 pb-2">
-      <h1 class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">Away</h1>
-      <p class="text-gray-500 dark:text-gray-400 mt-1">Your upcoming trips.</p>
+      <h1
+        class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600"
+      >
+        Away
+      </h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-1">
+        Plan your trips and log expense.
+      </p>
     </header>
 
     <div class="grid gap-4">
-      {trips.map((trip: any) => (
-        <a href={`/trip/${trip.id}`} class="group block relative p-5 bg-white dark:bg-slate-800 rounded-2xl shadow-sm hover:shadow-md border border-gray-100 dark:border-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">{trip.name}</h2>
-          <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2 space-x-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>{formatDate(trip.start_date)} - {formatDate(trip.end_date)}</span>
-          </div>
-          
-          <button
-            class="edit-trip-btn absolute top-4 right-4 z-10 p-2 text-gray-400 hover:text-blue-500 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-            aria-label="Edit Trip"
-            onclick="event.preventDefault();"
-            data-id={trip.id}
-            data-name={trip.name}
-            data-start={trip.start_date}
-            data-end={trip.end_date}
+      {
+        trips.map((trip: any) => (
+          <a
+            href={`/trip/${trip.id}`}
+            class="group block relative p-5 bg-white dark:bg-slate-800 rounded-2xl shadow-sm hover:shadow-md border border-gray-100 dark:border-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-          </button>
-        </a>
-      ))}
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
+              {trip.name}
+            </h2>
+            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2 space-x-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <span>
+                {formatDate(trip.start_date)} - {formatDate(trip.end_date)}
+              </span>
+            </div>
+
+            <button
+              class="edit-trip-btn absolute top-4 right-4 z-10 p-2 text-gray-400 hover:text-blue-500 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+              aria-label="Edit Trip"
+              onclick="event.preventDefault();"
+              data-id={trip.id}
+              data-name={trip.name}
+              data-start={trip.start_date}
+              data-end={trip.end_date}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+              </svg>
+            </button>
+          </a>
+        ))
+      }
     </div>
 
     <!-- Create new trip form -->
@@ -54,89 +93,197 @@ const formatDate = (date: string | Date) => {
       <h3 class="text-lg font-bold mb-4">Plan a New Trip</h3>
       <form method="POST" action="/api/trips" class="space-y-4">
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Destination / Name</label>
-          <input type="text" name="name" id="name" required class="mt-1 block w-full rounded-xl border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-base transition-colors" placeholder="e.g. Kyoto 2026" />
+          <label
+            for="name"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >Destination / Name</label
+          >
+          <input
+            type="text"
+            name="name"
+            id="name"
+            required
+            class="mt-1 block w-full rounded-xl border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-base transition-colors"
+            placeholder="e.g. Kyoto 2026"
+          />
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label for="start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
-            <input type="date" name="start_date" id="start_date" required class="mt-1 block w-full rounded-xl border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-base transition-colors" />
+            <label
+              for="start_date"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >Start Date</label
+            >
+            <input
+              type="date"
+              name="start_date"
+              id="start_date"
+              required
+              class="mt-1 block w-full rounded-xl border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-base transition-colors"
+            />
           </div>
           <div>
-            <label for="end_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
-            <input type="date" name="end_date" id="end_date" required class="mt-1 block w-full rounded-xl border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-base transition-colors" />
+            <label
+              for="end_date"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >End Date</label
+            >
+            <input
+              type="date"
+              name="end_date"
+              id="end_date"
+              required
+              class="mt-1 block w-full rounded-xl border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-base transition-colors"
+            />
           </div>
         </div>
-        <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-base font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 transition-all active:scale-[0.98]">
+        <button
+          type="submit"
+          class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-base font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 transition-all active:scale-[0.98]"
+        >
           Add Trip
         </button>
       </form>
     </div>
 
     <!-- Edit Trip Dialog -->
-    <dialog id="edit-trip-dialog" class="m-0 mt-auto w-full max-w-md mx-auto rounded-t-3xl p-6 bg-white dark:bg-slate-800 shadow-2xl border-0 backdrop:bg-black/40 backdrop:backdrop-blur-sm">
+    <dialog
+      id="edit-trip-dialog"
+      class="m-0 mt-auto w-full max-w-md mx-auto rounded-t-3xl p-6 bg-white dark:bg-slate-800 shadow-2xl border-0 backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+    >
       <div class="flex items-center justify-between mb-5">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Edit Trip</h3>
-        <button id="close-edit-trip" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+          Edit Trip
+        </h3>
+        <button
+          id="close-edit-trip"
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </button>
       </div>
-      <form id="edit-trip-form" method="POST" action="/api/trips" class="space-y-4">
+      <form
+        id="edit-trip-form"
+        method="POST"
+        action="/api/trips"
+        class="space-y-4"
+      >
         <input type="hidden" name="action" id="edit-trip-action" value="edit" />
         <input type="hidden" name="id" id="edit-trip-id" />
-        
+
         <div>
-          <label for="edit-name" class="block text-xs font-medium text-gray-500 mb-1">Destination / Name</label>
-          <input type="text" name="name" id="edit-name" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-4 py-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" />
+          <label
+            for="edit-name"
+            class="block text-xs font-medium text-gray-500 mb-1"
+            >Destination / Name</label
+          >
+          <input
+            type="text"
+            name="name"
+            id="edit-name"
+            required
+            class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-4 py-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+          />
         </div>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label for="edit-start" class="block text-xs font-medium text-gray-500 mb-1">Start Date</label>
-            <input type="date" name="start_date" id="edit-start" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-4 py-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" />
+            <label
+              for="edit-start"
+              class="block text-xs font-medium text-gray-500 mb-1"
+              >Start Date</label
+            >
+            <input
+              type="date"
+              name="start_date"
+              id="edit-start"
+              required
+              class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-4 py-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+            />
           </div>
           <div>
-            <label for="edit-end" class="block text-xs font-medium text-gray-500 mb-1">End Date</label>
-            <input type="date" name="end_date" id="edit-end" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-4 py-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" />
+            <label
+              for="edit-end"
+              class="block text-xs font-medium text-gray-500 mb-1"
+              >End Date</label
+            >
+            <input
+              type="date"
+              name="end_date"
+              id="edit-end"
+              required
+              class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-4 py-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+            />
           </div>
         </div>
-        
+
         <div class="pt-4 flex flex-col gap-2">
-          <button type="submit" onclick="document.getElementById('edit-trip-action').value='edit'; return confirm('Save these changes?');" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all">Save Changes</button>
-          <button type="submit" onclick="document.getElementById('edit-trip-action').value='delete'; return confirm('Permanently delete this entire trip and all its contents?');" class="w-full py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 active:scale-[0.98] transition-all">Delete Trip</button>
+          <button
+            type="submit"
+            onclick="document.getElementById('edit-trip-action').value='edit'; return confirm('Save these changes?');"
+            class="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all"
+            >Save Changes</button
+          >
+          <button
+            type="submit"
+            onclick="document.getElementById('edit-trip-action').value='delete'; return confirm('Permanently delete this entire trip and all its contents?');"
+            class="w-full py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 active:scale-[0.98] transition-all"
+            >Delete Trip</button
+          >
         </div>
       </form>
     </dialog>
   </div>
 
   <script>
-    const editDialog = document.getElementById('edit-trip-dialog') as HTMLDialogElement;
-    const closeBtn = document.getElementById('close-edit-trip');
-    
+    const editDialog = document.getElementById(
+      "edit-trip-dialog"
+    ) as HTMLDialogElement;
+    const closeBtn = document.getElementById("close-edit-trip");
+
     if (closeBtn && editDialog) {
-      closeBtn.addEventListener('click', () => editDialog.close());
-      editDialog.addEventListener('click', (e) => { if (e.target === editDialog) editDialog.close(); });
+      closeBtn.addEventListener("click", () => editDialog.close());
+      editDialog.addEventListener("click", (e) => {
+        if (e.target === editDialog) editDialog.close();
+      });
     }
 
-    document.querySelectorAll('.edit-trip-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    document.querySelectorAll(".edit-trip-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
         // Find inputs
-        const idInput = document.getElementById('edit-trip-id') as HTMLInputElement;
-        const nameInput = document.getElementById('edit-name') as HTMLInputElement;
-        const startInput = document.getElementById('edit-start') as HTMLInputElement;
-        const endInput = document.getElementById('edit-end') as HTMLInputElement;
+        const idInput = document.getElementById(
+          "edit-trip-id"
+        ) as HTMLInputElement;
+        const nameInput = document.getElementById(
+          "edit-name"
+        ) as HTMLInputElement;
+        const startInput = document.getElementById(
+          "edit-start"
+        ) as HTMLInputElement;
+        const endInput = document.getElementById(
+          "edit-end"
+        ) as HTMLInputElement;
 
         // Get data
         const target = e.currentTarget as HTMLButtonElement;
-        idInput.value = target.dataset.id || '';
-        nameInput.value = target.dataset.name || '';
-        startInput.value = target.dataset.start || '';
-        endInput.value = target.dataset.end || '';
+        idInput.value = target.dataset.id || "";
+        nameInput.value = target.dataset.name || "";
+        startInput.value = target.dataset.start || "";
+        endInput.value = target.dataset.end || "";
 
         editDialog?.showModal();
       });
     });
   </script>
 </Layout>
-
