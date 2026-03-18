@@ -1,0 +1,353 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { env } from 'cloudflare:workers';
+
+const { id } = Astro.params;
+const db = (env as any).DB;
+
+const tripResult = await db.prepare('SELECT * FROM trips WHERE id = ?').bind(id).first();
+if (!tripResult) {
+  return Astro.redirect('/404');
+}
+
+const url = new URL(Astro.request.url);
+const currentTab = url.searchParams.get('tab') || 'timeline';
+
+// Fetch timeline and expenses
+const { results: timelineItems } = await db.prepare('SELECT * FROM timeline_items WHERE trip_id = ? ORDER BY day_number ASC, time_mark ASC').bind(id).all();
+const { results: expenses } = await db.prepare('SELECT * FROM expenses WHERE trip_id = ? ORDER BY expense_date DESC').bind(id).all();
+
+// Calculate all days of the trip
+const startDate = new Date(tripResult.start_date);
+const endDate = new Date(tripResult.end_date);
+const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+const allDayTabs = Array.from({ length: diffDays }, (_, i) => {
+  const dayNum = i + 1;
+  const d = new Date(startDate);
+  d.setDate(startDate.getDate() + i);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  return {
+    number: dayNum,
+    label: `Day ${dayNum} - ${day}/${month}`
+  };
+});
+
+// Group timeline by day
+const timelineByDay: Record<number, any[]> = {};
+const timelineItemById: Record<number, any> = {};
+for (const item of timelineItems) {
+  if (!timelineByDay[item.day_number]) timelineByDay[item.day_number] = [];
+  timelineByDay[item.day_number].push(item);
+  timelineItemById[item.id] = item;
+}
+
+// Active day selection
+const activeDayParam = url.searchParams.get('day');
+const activeDay = activeDayParam ? Number(activeDayParam) : 1;
+const activeDayItems = timelineByDay[activeDay] ?? [];
+
+const totalExpenses = expenses.reduce((acc: number, curr: any) => acc + curr.amount, 0);
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+};
+
+// Expense filtering
+const filterDate = url.searchParams.get('expense_date');
+const uniqueDates = [...new Set(expenses.map((e: any) => e.expense_date))].sort((a: any, b: any) => new Date(b).getTime() - new Date(a).getTime());
+const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date === filterDate) : expenses;
+
+---
+
+<Layout title={`${tripResult.name} - Away`}>
+  <!-- Sticky Header for Trip Name & Tabs -->
+  <div class="sticky top-0 z-40 bg-[var(--bg-color)]/90 backdrop-blur-md pt-4 pb-2 border-b border-gray-200 dark:border-slate-800 -mx-4 px-4 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <a href="/" class="p-2 -ml-2 text-gray-400 hover:text-blue-500 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </a>
+      <h1 class="text-xl font-bold truncate">{tripResult.name}</h1>
+      <!-- + button shown only on timeline tab -->
+      {currentTab === 'timeline' ? (
+        <button id="open-add-event" class="w-9 h-9 flex items-center justify-center bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 active:scale-95 transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      ) : currentTab === 'expenses' ? (
+        <button id="open-add-expense" class="w-9 h-9 flex items-center justify-center bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 active:scale-95 transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      ) : (
+        <div class="w-9"></div>
+      )}
+    </div>
+    
+    <!-- Custom Segmented Control for Tabs -->
+    <div class="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
+      <a href={`?tab=timeline`} class={`flex-1 text-center py-2 text-sm font-medium rounded-lg transition-all ${currentTab === 'timeline' ? 'bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}>Timeline</a>
+      <a href={`?tab=expenses`} class={`flex-1 text-center py-2 text-sm font-medium rounded-lg transition-all ${currentTab === 'expenses' ? 'bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}>Expenses</a>
+    </div>
+
+    <!-- Day pill tabs (only visible on timeline tab) -->
+    {currentTab === 'timeline' && allDayTabs.length > 0 && (
+      <div class="flex gap-2 overflow-x-auto pb-1 pt-3 scrollbar-none -mx-1 px-1">
+        {allDayTabs.map(day => (
+          <a
+            href={`?tab=timeline&day=${day.number}`}
+            class={`shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${
+              activeDay === day.number
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200 dark:shadow-indigo-900'
+                : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:border-indigo-400 hover:text-indigo-600'
+            }`}
+          >{day.label}</a>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <!-- TIMELINE TAB -->
+  {currentTab === 'timeline' && (
+    <div class="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      {allDayTabs.length === 0 ? (
+        <div class="text-center py-16 text-gray-500">
+          <div class="text-4xl mb-3">🗺️</div>
+          <p class="font-medium">No events yet. Start planning!</p>
+        </div>
+      ) : activeDayItems.length === 0 ? (
+        <div class="text-center py-12 text-gray-500">No events for Day {activeDay} yet.</div>
+      ) : (
+        <div class="relative pl-6 border-l-2 border-indigo-100 dark:border-slate-700 space-y-6 ml-4">
+          {activeDayItems.map((item: any) => (
+            <div class="relative">
+              <!-- Timeline dot -->
+              <div class="absolute w-4 h-4 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full -left-[1.35rem] top-1 shadow ring-4 ring-white dark:ring-slate-900"></div>
+              
+              <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700">
+                <div class="flex justify-between items-start mb-2">
+                  <span class="text-xs font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md">{item.time_mark}</span>
+                  
+                  <form method="POST" action="/api/timeline" onsubmit="return confirm('Delete event?');">
+                    <input type="hidden" name="action" value="delete" />
+                    <input type="hidden" name="id" value={item.id} />
+                    <input type="hidden" name="trip_id" value={id} />
+                    <button class="text-gray-300 hover:text-red-500 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </form>
+                </div>
+                <h3 class="font-bold text-gray-900 dark:text-white text-lg">{item.title}</h3>
+                {item.description && <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">{item.description}</p>}
+                
+                <div class="mt-4 pt-3 border-t border-gray-100 dark:border-slate-700 flex gap-2">
+                  {item.maps_url && (
+                    <a href={item.maps_url} target="_blank" class="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Open Maps
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )}
+
+  <!-- ADD EVENT DIALOG (timeline tab) -->
+  {currentTab === 'timeline' && (
+    <dialog id="add-event-dialog" class="m-0 mt-auto w-full max-w-md mx-auto rounded-t-3xl p-6 bg-white dark:bg-slate-800 shadow-2xl border-0 backdrop:bg-black/40 backdrop:backdrop-blur-sm">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Add Event — Day {activeDay}</h3>
+        <button id="close-add-event" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form method="POST" action="/api/timeline" class="space-y-4">
+        <input type="hidden" name="trip_id" value={id} />
+        
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Day Number</label>
+            <select name="day_number" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+              {allDayTabs.map(day => (
+                <option value={day.number} selected={day.number === activeDay}>{day.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Time Mark</label>
+            <input type="text" name="time_mark" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm" placeholder="10:00 AM" />
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Title</label>
+          <input type="text" name="title" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm" placeholder="Flight to Tokyo" />
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Google Maps URL <span class="text-gray-400">(optional)</span></label>
+          <input type="url" name="maps_url" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm" placeholder="https://maps.google.com/..." />
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Notes <span class="text-gray-400">(optional)</span></label>
+          <textarea name="description" rows="2" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm resize-none"></textarea>
+        </div>
+        
+        <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 active:scale-[0.98] transition-all">Add to Timeline</button>
+      </form>
+    </dialog>
+  )}
+
+  <script>
+    function wireDialog(openId: string, closeId: string, dialogId: string) {
+      const openBtn = document.getElementById(openId);
+      const closeBtn = document.getElementById(closeId);
+      const dialog = document.getElementById(dialogId) as HTMLDialogElement | null;
+      if (!dialog) return;
+      openBtn?.addEventListener('click', () => dialog.showModal());
+      closeBtn?.addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
+    }
+    wireDialog('open-add-event',   'close-add-event',   'add-event-dialog');
+    wireDialog('open-add-expense', 'close-add-expense', 'add-expense-dialog');
+  </script>
+
+  <!-- EXPENSES TAB -->
+  {currentTab === 'expenses' && (
+    <div class="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      
+      <!-- Ledger Summary -->
+      <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-lg overflow-hidden relative">
+        <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10 blur-2xl"></div>
+        <h2 class="text-indigo-100 font-medium text-sm">{filterDate ? `Spending — ${new Date(filterDate).toLocaleDateString()}` : 'Total Expenses'}</h2>
+        <div class="text-4xl font-extrabold mt-1">{formatCurrency(displayExpenses.reduce((acc: number, e: any) => acc + e.amount, 0))}</div>
+      </div>
+
+      <!-- Date Filters -->
+      {uniqueDates.length > 0 && (
+        <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+          <a
+            href={`?tab=expenses`}
+            class={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${
+              !filterDate
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700'
+            }`}
+          >All</a>
+          {uniqueDates.map((d: any) => (
+            <a
+              href={`?tab=expenses&expense_date=${d}`}
+              class={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                filterDate === d
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700'
+              }`}
+            >{new Date(d).toLocaleDateString()}</a>
+          ))}
+        </div>
+      )}
+
+      <!-- Expense List -->
+      <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+        {displayExpenses.length === 0 ? (
+          <div class="p-8 text-center text-gray-500">No expenses matched this date.</div>
+        ) : (
+          <ul class="divide-y divide-gray-100 dark:divide-slate-700">
+            {displayExpenses.map((exp: any) => (
+              <li class="p-4 flex justify-between items-center group">
+                <div class="flex-1">
+                  <div class="font-bold text-gray-900 dark:text-white">{exp.description}</div>
+                  <div class="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                    <span>{new Date(exp.expense_date).toLocaleDateString()}</span>
+                    {exp.timeline_item_id && timelineItemById[exp.timeline_item_id] && (
+                      <span class="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                        📍 {timelineItemById[exp.timeline_item_id].title}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="font-bold text-lg text-gray-900 dark:text-white">{formatCurrency(exp.amount)}</div>
+                  <form method="POST" action="/api/expenses" class="inline" onsubmit="return confirm('Delete expense?');">
+                    <input type="hidden" name="action" value="delete" />
+                    <input type="hidden" name="id" value={exp.id} />
+                    <input type="hidden" name="trip_id" value={id} />
+                    <button class="text-xs text-red-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">Delete</button>
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )}
+
+  <!-- ADD EXPENSE DIALOG -->
+  {currentTab === 'expenses' && (
+    <dialog id="add-expense-dialog" class="m-0 mt-auto w-full max-w-md mx-auto rounded-t-3xl p-6 bg-white dark:bg-slate-800 shadow-2xl border-0 backdrop:bg-black/40 backdrop:backdrop-blur-sm">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Log Expense</h3>
+        <button id="close-add-expense" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form method="POST" action="/api/expenses" class="space-y-4">
+        <input type="hidden" name="trip_id" value={id} />
+        
+        <div class="flex gap-3">
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Amount</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span class="text-gray-500 font-medium">₫</span>
+              </div>
+              <input type="number" step="1000" inputmode="numeric" name="amount" required class="block w-full pl-7 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all font-medium text-lg" placeholder="0" />
+            </div>
+          </div>
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-500 mb-1">Date</label>
+            <input type="date" name="expense_date" required value={new Date().toISOString().split('T')[0]} class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 px-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all text-sm" />
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Description</label>
+          <input type="text" name="description" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all text-sm" placeholder="Dinner at local market" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Link to Timeline Event <span class="text-gray-400">(optional)</span></label>
+          <select name="timeline_item_id" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all text-sm">
+            <option value="">None</option>
+            {timelineItems.map((item: any) => (
+              <option value={item.id}>Day {item.day_number} · {item.time_mark} — {item.title}</option>
+            ))}
+          </select>
+        </div>
+        
+        <button type="submit" class="w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 active:scale-[0.98] transition-all">Save Expense</button>
+      </form>
+    </dialog>
+  )}
+</Layout>

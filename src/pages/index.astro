@@ -1,11 +1,64 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import { env } from 'cloudflare:workers';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const db = (env as any).DB;
+const { results: trips } = await db.prepare('SELECT * FROM trips ORDER BY start_date ASC').all();
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="Away - Your Trips">
+  <div class="space-y-6">
+    <header class="pt-6 pb-2">
+      <h1 class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600">Away</h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-1">Your upcoming trips.</p>
+    </header>
+
+    <div class="grid gap-4">
+      {trips.map((trip: any) => (
+        <a href={`/trip/${trip.id}`} class="group block relative p-5 bg-white dark:bg-slate-800 rounded-2xl shadow-sm hover:shadow-md border border-gray-100 dark:border-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">{trip.name}</h2>
+          <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2 space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>{new Date(trip.start_date).toLocaleDateString()} - {new Date(trip.end_date).toLocaleDateString()}</span>
+          </div>
+          
+          <form method="POST" action="/api/trips" class="absolute top-4 right-4 z-10" onsubmit="return confirm('Delete this trip?');">
+            <input type="hidden" name="action" value="delete" />
+            <input type="hidden" name="id" value={trip.id} />
+            <button type="submit" class="p-2 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" aria-label="Delete Trip">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </form>
+        </a>
+      ))}
+    </div>
+
+    <!-- Create new trip form -->
+    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-slate-800">
+      <h3 class="text-lg font-bold mb-4">Plan a New Trip</h3>
+      <form method="POST" action="/api/trips" class="space-y-4">
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Destination / Name</label>
+          <input type="text" name="name" id="name" required class="mt-1 block w-full rounded-xl border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-base transition-colors" placeholder="e.g. Kyoto 2026" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="start_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Start Date</label>
+            <input type="date" name="start_date" id="start_date" required class="mt-1 block w-full rounded-xl border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-base transition-colors" />
+          </div>
+          <div>
+            <label for="end_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">End Date</label>
+            <input type="date" name="end_date" id="end_date" required class="mt-1 block w-full rounded-xl border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-base transition-colors" />
+          </div>
+        </div>
+        <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-base font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 transition-all active:scale-[0.98]">
+          Add Trip
+        </button>
+      </form>
+    </div>
+  </div>
 </Layout>

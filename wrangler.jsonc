@@ -1,0 +1,20 @@
+{
+	"compatibility_date": "2026-03-17",
+	"compatibility_flags": ["global_fetch_strictly_public"],
+	"name": "away",
+	"main": "@astrojs/cloudflare/entrypoints/server",
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "away-db",
+			"database_id": "00000000-0000-0000-0000-000000000000"
+		}
+	]
+}
