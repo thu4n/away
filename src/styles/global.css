@@ -1,27 +1,54 @@
 @import "tailwindcss";
 
+@theme {
+  /* Sapphire Nightfall Whisper palette tokens */
+  --color-whisper: var(--whisper);
+  --color-sky-mist: var(--sky-mist);
+  --color-sapphire: var(--sapphire);
+  --color-nightfall: var(--nightfall);
+  --color-pale-sapphire: var(--pale-sapphire);
+  --color-ocean: var(--ocean);
+  --color-white: #ffffff;
+}
+
 :root {
-  --bg-color: #f8fafc;
-  --card-bg: #ffffff;
-  --text-color: #0f172a;
-  --accent: #3b82f6;
+  /* LIGHT MODE: Sapphire Nightfall Whisper (Light variant) */
+  --whisper: #ebf4fa;         /* Lightest airy blue bg */
+  --pale-sapphire: #f5f9fd;   /* Clean white-blue card surface */
+  --sky-mist: #7ec8e3;        /* Soft sky blue accent */
+  --sapphire: #1d5fa8;        /* Core Sapphire blue (Primary) */
+  --nightfall: #0b1d39;       /* Deep navy text */
+  --ocean: #2a7ab5;           /* Hover blue */
+  
+  --bg-color: var(--whisper);
+  --card-bg: var(--pale-sapphire);
+  --text-color: var(--nightfall);
+  --accent: var(--sapphire);
+  --secondary: var(--sky-mist);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-color: #0f172a;
-    --card-bg: #1e293b;
-    --text-color: #f1f5f9;
-    --accent: #60a5fa;
-  }
-  
-  input, select, textarea {
-    color: #f1f5f9 !important;
-  }
-}
+    /* DARK MODE: Sapphire Nightfall Whisper (Deep variant) */
+    --whisper: #e6eef7;       /* Light text on dark bg */
+    --pale-sapphire: #112244; /* Deep navy card */
+    --sky-mist: #7ec8e3;      /* Airy blue */
+    --sapphire: #4f91d4;      /* Brighter Sapphire for dark mode */
+    --nightfall: #0b1d39;     /* Deepest midnight navy bg */
+    --ocean: #2a7ab5;         /* Mid-ocean */
 
-input, select, textarea {
-  color: #0f172a;
+    --bg-color: #0b1d39;
+    --card-bg: #112244;
+    --text-color: #e6eef7;
+    --accent: #4f91d4;
+    --secondary: #7ec8e3;
+  }
+
+  input,
+  select,
+  textarea {
+    color: var(--text-color) !important;
+  }
 }
 
 body {
@@ -31,20 +58,22 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-input, select, textarea, button {
+input,
+select,
+textarea,
+button {
   font-family: inherit;
-  color: inherit;
 }
 
 .glassmorphism {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(235, 244, 250, 0.75);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
 @media (prefers-color-scheme: dark) {
   .glassmorphism {
-    background: rgba(30, 41, 59, 0.7);
+    background: rgba(11, 29, 57, 0.8);
   }
 }
 
@@ -53,6 +82,7 @@ input, select, textarea, button {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
@@ -67,14 +97,29 @@ dialog {
   overflow-y: auto;
   animation: slide-up 0.25s ease;
 }
+
 dialog::backdrop {
   animation: fade-in 0.2s ease;
 }
+
 @keyframes slide-up {
-  from { transform: translateX(-50%) translateY(30px); opacity: 0; }
-  to   { transform: translateX(-50%) translateY(0);   opacity: 1; }
+  from {
+    transform: translateX(-50%) translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
 }
+
 @keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }

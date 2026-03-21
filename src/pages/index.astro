@@ -20,7 +20,7 @@ const formatDate = (date: string | Date) => {
   <div class="space-y-6">
     <header class="pt-6 pb-2">
       <h1
-        class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-indigo-600"
+        class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sapphire to-nightfall dark:from-sky-mist dark:to-sapphire"
       >
         Away
       </h1>
@@ -34,9 +34,9 @@ const formatDate = (date: string | Date) => {
         trips.map((trip: any) => (
           <a
             href={`/trip/${trip.id}`}
-            class="group block relative p-5 bg-white dark:bg-slate-800 rounded-2xl shadow-sm hover:shadow-md border border-gray-100 dark:border-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
+            class="group block relative p-5 bg-pale-sapphire dark:bg-nightfall/60 rounded-2xl shadow-sm hover:shadow-md border border-sky-mist/30 dark:border-sapphire/30 transition-all focus:outline-none focus:ring-2 focus:ring-sapphire focus:ring-offset-2 dark:focus:ring-offset-nightfall"
           >
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
+            <h2 class="text-xl font-bold text-nightfall dark:text-whisper group-hover:text-sapphire dark:group-hover:text-sky-mist transition-colors">
               {trip.name}
             </h2>
             <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2 space-x-2">
@@ -60,7 +60,7 @@ const formatDate = (date: string | Date) => {
             </div>
 
             <button
-              class="edit-trip-btn absolute top-4 right-4 z-10 p-2 text-gray-400 hover:text-blue-500 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+              class="edit-trip-btn absolute top-4 right-4 z-10 p-2 text-sapphire/50 hover:text-sapphire rounded-full hover:bg-sky-mist/20 transition-colors"
               aria-label="Edit Trip"
               onclick="event.preventDefault();"
               data-id={trip.id}
@@ -88,30 +88,34 @@ const formatDate = (date: string | Date) => {
       }
     </div>
 
-    <!-- Create new trip form -->
-    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-slate-800">
-      <h3 class="text-lg font-bold mb-4">Plan a New Trip</h3>
+    <!-- Create Trip Form -->
+    <div
+      class="mt-8 p-6 bg-pale-sapphire dark:bg-nightfall/40 rounded-3xl border border-sky-mist/30 dark:border-sapphire/20"
+    >
+      <h2 class="text-xl font-bold text-nightfall dark:text-whisper mb-4">
+        Add New Trip
+      </h2>
       <form method="POST" action="/api/trips" class="space-y-4">
         <div>
           <label
             for="name"
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >Destination / Name</label
+            class="block text-sm font-medium text-nightfall/60 dark:text-whisper/60"
+            >Trip Name</label
           >
           <input
             type="text"
             name="name"
             id="name"
             required
-            class="mt-1 block w-full rounded-xl border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-base transition-colors"
-            placeholder="e.g. Kyoto 2026"
+            placeholder="Japan 2024"
+            class="mt-1 block w-full rounded-xl border-sky-mist/30 dark:border-sapphire/30 bg-white dark:bg-nightfall/60 shadow-sm focus:border-sapphire focus:ring-sapphire px-4 py-3 text-base transition-colors"
           />
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4">
           <div>
             <label
               for="start_date"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              class="block text-sm font-medium text-nightfall/60 dark:text-whisper/60"
               >Start Date</label
             >
             <input
@@ -119,13 +123,13 @@ const formatDate = (date: string | Date) => {
               name="start_date"
               id="start_date"
               required
-              class="mt-1 block w-full rounded-xl border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-base transition-colors"
+              class="mt-1 block w-full rounded-xl border-sky-mist/30 dark:border-sapphire/30 bg-white dark:bg-nightfall/60 shadow-sm focus:border-sapphire focus:ring-sapphire px-4 py-3 text-base transition-colors"
             />
           </div>
           <div>
             <label
               for="end_date"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              class="block text-sm font-medium text-nightfall/60 dark:text-whisper/60"
               >End Date</label
             >
             <input
@@ -133,13 +137,13 @@ const formatDate = (date: string | Date) => {
               name="end_date"
               id="end_date"
               required
-              class="mt-1 block w-full rounded-xl border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-3 text-base transition-colors"
+              class="mt-1 block w-full rounded-xl border-sky-mist/30 dark:border-sapphire/30 bg-white dark:bg-nightfall/60 shadow-sm focus:border-sapphire focus:ring-sapphire px-4 py-3 text-base transition-colors"
             />
           </div>
         </div>
         <button
           type="submit"
-          class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-base font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-slate-900 transition-all active:scale-[0.98]"
+          class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-base font-bold text-white bg-sapphire hover:bg-ocean focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sapphire dark:focus:ring-offset-nightfall transition-all active:scale-[0.98]"
         >
           Add Trip
         </button>
@@ -149,19 +153,19 @@ const formatDate = (date: string | Date) => {
     <!-- Edit Trip Dialog -->
     <dialog
       id="edit-trip-dialog"
-      class="m-0 mt-auto w-full max-w-md mx-auto rounded-t-3xl p-6 bg-white dark:bg-slate-800 shadow-2xl border-0 backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+      class="m-0 mt-auto w-full max-w-md mx-auto rounded-t-3xl p-6 bg-pale-sapphire dark:bg-nightfall shadow-2xl border-0 backdrop:bg-black/40 backdrop:backdrop-blur-sm"
     >
       <div class="flex items-center justify-between mb-5">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+        <h3 class="text-lg font-bold text-nightfall dark:text-whisper">
           Edit Trip
         </h3>
         <button
-          id="close-edit-trip"
-          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
+          id="close-edit-dialog"
+          class="text-sapphire/50 hover:text-sapphire p-1"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5"
+            class="h-6 w-6"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -174,65 +178,58 @@ const formatDate = (date: string | Date) => {
           </svg>
         </button>
       </div>
-      <form
-        id="edit-trip-form"
-        method="POST"
-        action="/api/trips"
-        class="space-y-4"
-      >
+      <form method="POST" action="/api/trips" class="space-y-4">
         <input type="hidden" name="action" id="edit-trip-action" value="edit" />
         <input type="hidden" name="id" id="edit-trip-id" />
-
         <div>
           <label
-            for="edit-name"
-            class="block text-xs font-medium text-gray-500 mb-1"
-            >Destination / Name</label
+            for="edit_name"
+            class="block text-sm font-medium text-nightfall/60 dark:text-whisper/60"
+            >Trip Name</label
           >
           <input
             type="text"
             name="name"
-            id="edit-name"
+            id="edit_name"
             required
-            class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-4 py-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+            class="mt-1 block w-full rounded-xl border-sky-mist/30 dark:border-sapphire/30 bg-white dark:bg-nightfall/60 shadow-sm focus:border-sapphire focus:ring-sapphire px-4 py-3 text-base"
           />
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4">
           <div>
             <label
-              for="edit-start"
-              class="block text-xs font-medium text-gray-500 mb-1"
+              for="edit_start_date"
+              class="block text-sm font-medium text-nightfall/60 dark:text-whisper/60"
               >Start Date</label
             >
             <input
               type="date"
               name="start_date"
-              id="edit-start"
+              id="edit_start_date"
               required
-              class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-4 py-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+              class="mt-1 block w-full rounded-xl border-sky-mist/30 dark:border-sapphire/30 bg-white dark:bg-nightfall/60 shadow-sm focus:border-sapphire focus:ring-sapphire px-4 py-3 text-base"
             />
           </div>
           <div>
             <label
-              for="edit-end"
-              class="block text-xs font-medium text-gray-500 mb-1"
+              for="edit_end_date"
+              class="block text-sm font-medium text-nightfall/60 dark:text-whisper/60"
               >End Date</label
             >
             <input
               type="date"
               name="end_date"
-              id="edit-end"
+              id="edit_end_date"
               required
-              class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-4 py-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm"
+              class="mt-1 block w-full rounded-xl border-sky-mist/30 dark:border-sapphire/30 bg-white dark:bg-nightfall/60 shadow-sm focus:border-sapphire focus:ring-sapphire px-4 py-3 text-base"
             />
           </div>
         </div>
-
         <div class="pt-4 flex flex-col gap-2">
           <button
             type="submit"
             onclick="document.getElementById('edit-trip-action').value='edit'; return confirm('Save these changes?');"
-            class="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all"
+            class="w-full py-3 bg-sapphire text-white font-semibold rounded-xl hover:bg-ocean active:scale-[0.98] transition-all"
             >Save Changes</button
           >
           <button
@@ -247,43 +244,33 @@ const formatDate = (date: string | Date) => {
   </div>
 
   <script>
-    const editDialog = document.getElementById(
-      "edit-trip-dialog"
-    ) as HTMLDialogElement;
-    const closeBtn = document.getElementById("close-edit-trip");
-
-    if (closeBtn && editDialog) {
-      closeBtn.addEventListener("click", () => editDialog.close());
-      editDialog.addEventListener("click", (e) => {
-        if (e.target === editDialog) editDialog.close();
-      });
-    }
+    const dialog = document.getElementById("edit-trip-dialog") as any;
+    const closeBtn = document.getElementById("close-edit-dialog");
 
     document.querySelectorAll(".edit-trip-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
-        // Find inputs
-        const idInput = document.getElementById(
-          "edit-trip-id"
-        ) as HTMLInputElement;
-        const nameInput = document.getElementById(
-          "edit-name"
-        ) as HTMLInputElement;
-        const startInput = document.getElementById(
-          "edit-start"
-        ) as HTMLInputElement;
-        const endInput = document.getElementById(
-          "edit-end"
-        ) as HTMLInputElement;
-
-        // Get data
         const target = e.currentTarget as HTMLButtonElement;
-        idInput.value = target.dataset.id || "";
-        nameInput.value = target.dataset.name || "";
-        startInput.value = target.dataset.start || "";
-        endInput.value = target.dataset.end || "";
+        const id = target.getAttribute("data-id");
+        const name = target.getAttribute("data-name");
+        const start = target.getAttribute("data-start");
+        const end = target.getAttribute("data-end");
 
-        editDialog?.showModal();
+        (document.getElementById("edit-trip-id") as HTMLInputElement).value =
+          id || "";
+        (document.getElementById("edit_name") as HTMLInputElement).value =
+          name || "";
+        (document.getElementById("edit_start_date") as HTMLInputElement).value =
+          start || "";
+        (document.getElementById("edit_end_date") as HTMLInputElement).value =
+          end || "";
+
+        dialog.showModal();
       });
+    });
+
+    closeBtn?.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (e: any) => {
+      if (e.target === dialog) dialog.close();
     });
   </script>
 </Layout>

@@ -80,14 +80,14 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
       <h1 class="text-xl font-bold truncate">{tripResult.name}</h1>
       <!-- + button shown only on timeline tab -->
       {currentTab === 'timeline' ? (
-        <button id="open-add-event" class="w-9 h-9 flex items-center justify-center bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 active:scale-95 transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button id="open-add-event" class="w-9 h-9 flex items-center justify-center bg-sapphire text-white rounded-full shadow-lg hover:bg-ocean active:scale-95 transition-all font-bold">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="white">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
           </svg>
         </button>
       ) : currentTab === 'expenses' ? (
-        <button id="open-add-expense" class="w-9 h-9 flex items-center justify-center bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 active:scale-95 transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button id="open-add-expense" class="w-9 h-9 flex items-center justify-center bg-sapphire text-white rounded-full shadow-lg hover:bg-ocean active:scale-95 transition-all font-bold">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="white">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
           </svg>
         </button>
@@ -97,9 +97,9 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
     </div>
     
     <!-- Custom Segmented Control for Tabs -->
-    <div class="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
-      <a href={`?tab=timeline`} class={`flex-1 text-center py-2 text-sm font-medium rounded-lg transition-all ${currentTab === 'timeline' ? 'bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}>Timeline</a>
-      <a href={`?tab=expenses`} class={`flex-1 text-center py-2 text-sm font-medium rounded-lg transition-all ${currentTab === 'expenses' ? 'bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}>Expenses</a>
+    <div class="flex bg-whisper/80 dark:bg-nightfall/80 p-1 rounded-xl">
+      <a href={`?tab=timeline`} class={`flex-1 text-center py-2 text-sm font-medium rounded-lg transition-all ${currentTab === 'timeline' ? 'bg-pale-sapphire dark:bg-sapphire/30 shadow text-sapphire dark:text-sky-mist' : 'text-nightfall/50 hover:text-nightfall dark:text-whisper/50 dark:hover:text-whisper'}`}>Timeline</a>
+      <a href={`?tab=expenses`} class={`flex-1 text-center py-2 text-sm font-medium rounded-lg transition-all ${currentTab === 'expenses' ? 'bg-pale-sapphire dark:bg-sapphire/30 shadow text-sapphire dark:text-sky-mist' : 'text-nightfall/50 hover:text-nightfall dark:text-whisper/50 dark:hover:text-whisper'}`}>Expenses</a>
     </div>
 
     <!-- Day pill tabs (only visible on timeline tab) -->
@@ -110,8 +110,8 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
             href={`?tab=timeline&day=${day.number}`}
             class={`shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold transition-all border ${
               activeDay === day.number
-                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200 dark:shadow-indigo-900'
-                : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:border-indigo-400 hover:text-indigo-600'
+                ? 'bg-sapphire text-whisper border-sapphire shadow-sm'
+                : 'bg-pale-sapphire dark:bg-nightfall/40 text-nightfall/70 dark:text-whisper/70 border-sky-mist/30 dark:border-sapphire/30 hover:border-sapphire hover:text-sapphire'
             }`}
           >{day.label}</a>
         ))}
@@ -130,16 +130,16 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
       ) : activeDayItems.length === 0 ? (
         <div class="text-center py-12 text-gray-500">No events for Day {activeDay} yet.</div>
       ) : (
-        <div class="relative pl-6 border-l-2 border-indigo-100 dark:border-slate-700 space-y-6 ml-4">
+        <div class="relative pl-6 border-l-2 border-sky-mist/40 dark:border-sapphire/40 space-y-6 ml-4">
           {activeDayItems.map((item: any) => (
             <div class="relative">
-              <div class="group bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-700">
+              <div class="group bg-pale-sapphire dark:bg-nightfall/60 p-4 rounded-2xl shadow-sm border border-sky-mist/30 dark:border-sapphire/20">
                 <div class="flex justify-between items-start mb-2">
-                  <span class="text-xs font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md">{item.time_mark}</span>
+                  <span class="text-[10px] font-extrabold text-whisper bg-sapphire px-2 py-0.5 rounded-md uppercase tracking-wider">{item.time_mark}</span>
                   
                   <div class="flex gap-2 items-center">
                     <button
-                      class="edit-event-btn p-2 text-gray-400 hover:text-blue-500 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                      class="edit-event-btn p-2 text-sapphire/40 hover:text-sapphire rounded-full hover:bg-sky-mist/20 transition-colors"
                       data-id={item.id}
                       data-day={item.day_number}
                       data-time={item.time_mark}
@@ -153,12 +153,12 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
                     </button>
                   </div>
                 </div>
-                <h3 class="font-bold text-gray-900 dark:text-white text-lg">{item.title}</h3>
-                {item.description && <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">{item.description}</p>}
+                <h3 class="font-bold text-nightfall dark:text-whisper text-lg">{item.title}</h3>
+                {item.description && <p class="text-sm text-nightfall/60 dark:text-whisper/60 mt-1">{item.description}</p>}
                 
                 <div class="mt-4 pt-3 border-t border-gray-100 dark:border-slate-700 flex gap-2">
                   {item.maps_url && (
-                    <a href={item.maps_url} target="_blank" class="inline-flex items-center px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
+                    <a href={item.maps_url} target="_blank" class="inline-flex items-center px-3 py-1.5 text-xs font-bold text-white bg-sapphire rounded-lg hover:bg-ocean transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -192,7 +192,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-500 mb-1">Day Number</label>
-            <select name="day_number" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+            <select name="day_number" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm">
               {allDayTabs.map(day => (
                 <option value={day.number} selected={day.number === activeDay}>{day.label}</option>
               ))}
@@ -200,26 +200,26 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-500 mb-1">Time Mark</label>
-            <input type="time" name="time_mark" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm" />
+            <input type="time" name="time_mark" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" />
           </div>
         </div>
         
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">Title</label>
-          <input type="text" name="title" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm" placeholder="Flight to Tokyo" />
+          <input type="text" name="title" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" placeholder="Flight to Tokyo" />
         </div>
         
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">Google Maps URL <span class="text-gray-400">(optional)</span></label>
-          <input type="url" name="maps_url" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm" placeholder="https://maps.google.com/..." />
+          <input type="url" name="maps_url" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" placeholder="https://maps.google.com/..." />
         </div>
         
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">Notes <span class="text-gray-400">(optional)</span></label>
-          <textarea name="description" rows="2" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm resize-none"></textarea>
+          <textarea name="description" rows="2" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm resize-none"></textarea>
         </div>
         
-        <button type="submit" class="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 active:scale-[0.98] transition-all">Add to Timeline</button>
+        <button type="submit" class="w-full py-3 bg-sapphire text-whisper font-semibold rounded-xl hover:bg-ocean active:scale-[0.98] transition-all">Add to Timeline</button>
       </form>
     </dialog>
   )}
@@ -243,7 +243,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-500 mb-1">Day Number</label>
-            <select name="day_number" id="edit-event-day" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm">
+            <select name="day_number" id="edit-event-day" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm">
               {allDayTabs.map(day => (
                 <option value={day.number}>{day.label}</option>
               ))}
@@ -251,23 +251,23 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-500 mb-1">Time Mark</label>
-            <input type="time" name="time_mark" id="edit-event-time" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm" />
+            <input type="time" name="time_mark" id="edit-event-time" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" />
           </div>
         </div>
         
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">Title</label>
-          <input type="text" name="title" id="edit-event-title" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm" placeholder="Flight to Tokyo" />
+          <input type="text" name="title" id="edit-event-title" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" placeholder="Flight to Tokyo" />
         </div>
         
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">Google Maps URL <span class="text-gray-400">(optional)</span></label>
-          <input type="url" name="maps_url" id="edit-event-url" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm" placeholder="https://maps.google.com/..." />
+          <input type="url" name="maps_url" id="edit-event-url" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" placeholder="https://maps.google.com/..." />
         </div>
         
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">Notes <span class="text-gray-400">(optional)</span></label>
-          <textarea name="description" id="edit-event-desc" rows="2" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all text-sm resize-none"></textarea>
+          <textarea name="description" id="edit-event-desc" rows="2" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm resize-none"></textarea>
         </div>
         
         <div class="pt-4 flex flex-col gap-2">
@@ -318,9 +318,9 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
     <div class="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
       
       <!-- Ledger Summary -->
-      <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-lg overflow-hidden relative">
-        <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10 blur-2xl"></div>
-        <h2 class="text-indigo-100 font-medium text-sm">{filterDate ? `Spending — ${formatDate(filterDate)}` : 'Total Expenses'}</h2>
+      <div class="bg-gradient-to-br from-sapphire to-nightfall rounded-3xl p-6 text-whisper shadow-lg overflow-hidden relative">
+        <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-sky-mist opacity-10 blur-2xl"></div>
+        <h2 class="text-sky-mist/80 font-medium text-sm">{filterDate ? `Spending — ${formatDate(filterDate)}` : 'Total Expenses'}</h2>
         <div class="text-4xl font-extrabold mt-1">{formatCurrency(displayExpenses.reduce((acc: number, e: any) => acc + e.amount, 0))}</div>
       </div>
 
@@ -331,7 +331,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
             href={`?tab=expenses`}
             class={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${
               !filterDate
-                ? 'bg-indigo-600 text-white border-indigo-600'
+                ? 'bg-sapphire text-white border-sapphire'
                 : 'bg-white dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700'
             }`}
           >All</a>
@@ -340,8 +340,8 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
               href={`?tab=expenses&expense_date=${d}`}
               class={`shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${
                 filterDate === d
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : 'bg-white dark:bg-slate-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-slate-700'
+                  ? 'bg-sapphire text-whisper border-sapphire'
+                  : 'bg-pale-sapphire dark:bg-nightfall/40 text-nightfall/60 dark:text-whisper/60 border-sky-mist/30 dark:border-sapphire/30'
               }`}
             >{formatDate(d)}</a>
           ))}
@@ -349,7 +349,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
       )}
 
       <!-- Expense List -->
-      <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
+      <div class="bg-pale-sapphire dark:bg-nightfall/40 rounded-3xl shadow-sm border border-sky-mist/30 dark:border-sapphire/20 overflow-hidden">
         {displayExpenses.length === 0 ? (
           <div class="p-8 text-center text-gray-500">No expenses matched this date.</div>
         ) : (
@@ -379,7 +379,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
                   <div class="font-bold text-lg text-gray-900 dark:text-white mb-2">{formatCurrency(exp.amount)}</div>
                   <div class="flex gap-2 justify-end transition-opacity">
                     <button
-                      class="edit-expense-btn p-2 text-gray-400 hover:text-blue-500 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                      class="edit-expense-btn p-2 text-sapphire/40 hover:text-sapphire rounded-full hover:bg-sky-mist/20 transition-colors"
                       data-id={exp.id}
                       data-amount={exp.amount}
                       data-date={exp.expense_date.split('T')[0]}
@@ -450,7 +450,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
           <input type="file" name="proof_image" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 dark:file:bg-green-900/30 dark:file:text-green-400 dark:hover:file:bg-green-900/50 transition-all cursor-pointer border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700/50" />
         </div>
         
-        <button type="submit" class="w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 active:scale-[0.98] transition-all">Save Expense</button>
+        <button type="submit" class="w-full py-3 bg-sapphire text-whisper font-bold rounded-xl hover:bg-ocean active:scale-[0.98] transition-all">Save Expense</button>
       </form>
     </dialog>
   )}
@@ -519,7 +519,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
         </div>
         
         <div class="pt-4 flex flex-col gap-2">
-          <button type="submit" onclick="document.getElementById('edit-expense-action').value='edit'; return confirm('Save expense changes?');" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all">Save Changes</button>
+          <button type="submit" onclick="document.getElementById('edit-expense-action').value='edit'; return confirm('Save expense changes?');" class="w-full py-3 bg-sapphire text-whisper font-semibold rounded-xl hover:bg-ocean active:scale-[0.98] transition-all">Save Changes</button>
           <button type="submit" onclick="document.getElementById('edit-expense-action').value='delete'; return confirm('Remove this expense record?');" class="w-full py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 active:scale-[0.98] transition-all">Delete Expense</button>
         </div>
       </form>
