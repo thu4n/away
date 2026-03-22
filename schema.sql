@@ -6,7 +6,8 @@ CREATE TABLE trips (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     start_date DATE NOT NULL,
-    end_date DATE NOT NULL
+    end_date DATE NOT NULL,
+    description TEXT
 );
 
 CREATE TABLE timeline_items (
@@ -27,4 +28,14 @@ CREATE TABLE expenses (
     description TEXT NOT NULL,
     expense_date DATE NOT NULL,
     image_key TEXT
+);
+
+CREATE TABLE trip_resources (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    trip_id INTEGER REFERENCES trips(id) ON DELETE CASCADE,
+    type TEXT NOT NULL, -- 'link' or 'embed'
+    title TEXT NOT NULL,
+    url TEXT NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

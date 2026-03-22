@@ -13,9 +13,10 @@ if (!tripResult) {
 const url = new URL(Astro.request.url);
 const currentTab = url.searchParams.get('tab') || 'timeline';
 
-// Fetch timeline and expenses
+// Fetch timeline, expenses, resources
 const { results: timelineItems } = await db.prepare('SELECT * FROM timeline_items WHERE trip_id = ? ORDER BY day_number ASC, time_mark ASC').bind(id).all();
 const { results: expenses } = await db.prepare('SELECT * FROM expenses WHERE trip_id = ? ORDER BY expense_date DESC').bind(id).all();
+const { results: resources } = await db.prepare('SELECT * FROM trip_resources WHERE trip_id = ? ORDER BY created_at DESC').bind(id).all();
 
 const formatDate = (date: string | Date) => {
   const d = new Date(date);
@@ -78,7 +79,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
         </svg>
       </a>
       <h1 class="text-xl font-bold truncate">{tripResult.name}</h1>
-      <!-- + button shown only on timeline tab -->
+      <!-- + button shown conditionally -->
       {currentTab === 'timeline' ? (
         <button id="open-add-event" class="w-9 h-9 flex items-center justify-center bg-sapphire text-white rounded-full shadow-lg hover:bg-ocean active:scale-95 transition-all font-bold">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="white">
@@ -87,6 +88,12 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
         </button>
       ) : currentTab === 'expenses' ? (
         <button id="open-add-expense" class="w-9 h-9 flex items-center justify-center bg-sapphire text-white rounded-full shadow-lg hover:bg-ocean active:scale-95 transition-all font-bold">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="white">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      ) : currentTab === 'resources' ? (
+        <button id="open-add-resource" class="w-9 h-9 flex items-center justify-center bg-sapphire text-white rounded-full shadow-lg hover:bg-ocean active:scale-95 transition-all font-bold">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="white">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
           </svg>
@@ -100,6 +107,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
     <div class="flex bg-whisper/80 dark:bg-nightfall/80 p-1 rounded-xl">
       <a href={`?tab=timeline`} class={`flex-1 text-center py-2 text-sm font-medium rounded-lg transition-all ${currentTab === 'timeline' ? 'bg-pale-sapphire dark:bg-sapphire/30 shadow text-sapphire dark:text-sky-mist' : 'text-nightfall/50 hover:text-nightfall dark:text-whisper/50 dark:hover:text-whisper'}`}>Timeline</a>
       <a href={`?tab=expenses`} class={`flex-1 text-center py-2 text-sm font-medium rounded-lg transition-all ${currentTab === 'expenses' ? 'bg-pale-sapphire dark:bg-sapphire/30 shadow text-sapphire dark:text-sky-mist' : 'text-nightfall/50 hover:text-nightfall dark:text-whisper/50 dark:hover:text-whisper'}`}>Expenses</a>
+      <a href={`?tab=resources`} class={`flex-1 text-center py-2 text-sm font-medium rounded-lg transition-all ${currentTab === 'resources' ? 'bg-pale-sapphire dark:bg-sapphire/30 shadow text-sapphire dark:text-sky-mist' : 'text-nightfall/50 hover:text-nightfall dark:text-whisper/50 dark:hover:text-whisper'}`}>Resources</a>
     </div>
 
     <!-- Day pill tabs (only visible on timeline tab) -->
@@ -118,7 +126,6 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
       </div>
     )}
   </div>
-
   <!-- TIMELINE TAB -->
   {currentTab === 'timeline' && (
     <div class="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -291,6 +298,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
     }
     wireDialog('open-add-event',   'close-add-event',   'add-event-dialog');
     wireDialog('open-add-expense', 'close-add-expense', 'add-expense-dialog');
+    wireDialog('open-add-resource', 'close-add-resource', 'add-resource-dialog');
 
     // Edit Event wiring
     const editEventDialog = document.getElementById('edit-event-dialog');
@@ -522,6 +530,143 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
           <button type="submit" onclick="document.getElementById('edit-expense-action').value='edit'; return confirm('Save expense changes?');" class="w-full py-3 bg-sapphire text-whisper font-semibold rounded-xl hover:bg-ocean active:scale-[0.98] transition-all">Save Changes</button>
           <button type="submit" onclick="document.getElementById('edit-expense-action').value='delete'; return confirm('Remove this expense record?');" class="w-full py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 active:scale-[0.98] transition-all">Delete Expense</button>
         </div>
+      </form>
+    </dialog>
+  )}
+
+  <!-- RESOURCES TAB -->
+  {currentTab === 'resources' && (
+    <div class="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      {resources.length === 0 ? (
+        <div class="text-center py-16 text-gray-500">
+          <div class="text-4xl mb-3">📁</div>
+          <p class="font-medium">No resources added yet.</p>
+        </div>
+      ) : (
+        <div class="flex flex-col gap-6">
+          {resources.map((item: any) => (
+            <div class="group bg-pale-sapphire dark:bg-nightfall/60 p-4 rounded-2xl shadow-sm border border-sky-mist/30 dark:border-sapphire/20 flex flex-col relative w-full overflow-hidden">
+              
+              <div class="flex justify-between items-start mb-3">
+                <span class="text-[10px] font-extrabold text-whisper bg-sapphire px-2 py-0.5 rounded-md uppercase tracking-wider">{item.type}</span>
+                
+                <form method="POST" action="/api/resources" class="inline" onsubmit="return confirm('Delete this resource?');">
+                  <input type="hidden" name="action" value="delete" />
+                  <input type="hidden" name="id" value={item.id} />
+                  <input type="hidden" name="trip_id" value={id} />
+                  <button type="submit" class="p-2 text-red-400 hover:text-red-600 rounded-full hover:bg-red-50/10 transition-colors -m-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </form>
+              </div>
+
+              <h3 class="font-bold text-nightfall dark:text-whisper text-lg mb-2">{item.title}</h3>
+              {item.notes && <p class="text-sm text-nightfall/60 dark:text-whisper/60 mb-4">{item.notes}</p>}
+              
+              <div class="mt-auto">
+                {item.type === 'embed' && (item.url.includes('youtube.com') || item.url.includes('youtu.be')) ? (
+                  <div class="aspect-video w-full rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700">
+                    <iframe 
+                      src={(() => {
+                        let videoId = '';
+                        if (item.url.includes('youtu.be/')) videoId = item.url.split('youtu.be/')[1].split('?')[0];
+                        else if (item.url.includes('watch?v=')) videoId = item.url.split('watch?v=')[1].split('&')[0];
+                        return videoId ? `https://www.youtube.com/embed/${videoId}` : item.url;
+                      })()}
+                      title={item.title} 
+                      frameborder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowfullscreen
+                      class="w-full h-full"
+                    ></iframe>
+                  </div>
+                ) : item.type === 'embed' && item.url.includes('instagram.com') ? (
+                  <div class="w-full rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 bg-white">
+                    <iframe 
+                      src={(() => {
+                        try {
+                          const u = new URL(item.url);
+                          let p = u.pathname;
+                          if (!p.endsWith('/')) p += '/';
+                          return `https://www.instagram.com${p}embed/`;
+                        } catch(e) { return item.url; }
+                      })()}
+                      class="w-full"
+                      height="480"
+                      frameborder="0" 
+                      scrolling="no" 
+                      allowtransparency="true"
+                    ></iframe>
+                  </div>
+                ) : (
+                  <a href={item.url} target="_blank" class="inline-flex items-center px-4 py-2 text-xs font-bold text-white bg-sapphire rounded-lg hover:bg-ocean transition-colors w-full justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Visit Link
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )}
+
+  <!-- ADD RESOURCE DIALOG -->
+  {currentTab === 'resources' && (
+    <dialog id="add-resource-dialog" class="m-0 mt-auto w-full max-w-md mx-auto rounded-t-3xl p-6 bg-white dark:bg-slate-800 shadow-2xl border-0 backdrop:bg-black/40 backdrop:backdrop-blur-sm">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Add Resource</h3>
+        <button id="close-add-resource" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <div class="mb-5 bg-amber-50 dark:bg-amber-900/30 p-3 rounded-xl border border-amber-200 dark:border-amber-700">
+        <div class="flex items-start">
+          <svg class="h-5 w-5 text-amber-500 mr-2 shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-[11px] text-amber-800 dark:text-amber-300">
+            <strong>Security Reminder:<br/></strong> Ensure your linked documents are safely permissioned. Do not link publicly accessible folders if they contain unredacted PNR references or sensitive tickets.
+          </p>
+        </div>
+      </div>
+
+      <form method="POST" action="/api/resources" class="space-y-4">
+        <input type="hidden" name="trip_id" value={id} />
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Resource Type</label>
+          <select name="type" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm">
+            <option value="link">Secure Link</option>
+            <option value="embed">YouTube Embed (e.g. Travel Vlog)</option>
+            <option value="embed">Instagram Embed</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Title</label>
+          <input type="text" name="title" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" placeholder="Shared Google Drive" />
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">URL / Link</label>
+          <input type="url" name="url" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm" placeholder="https://..." />
+        </div>
+        
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Notes <span class="text-gray-400">(optional)</span></label>
+          <textarea name="notes" rows="2" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm resize-none"></textarea>
+        </div>
+        
+        <button type="submit" class="w-full py-3 bg-sapphire text-whisper font-semibold rounded-xl hover:bg-ocean active:scale-[0.98] transition-all">Save Resource</button>
       </form>
     </dialog>
   )}

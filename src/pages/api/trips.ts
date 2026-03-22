@@ -31,13 +31,14 @@ export const POST: APIRoute = async ({ request }) => {
     const name = data.get('name');
     const start_date = data.get('start_date');
     const end_date = data.get('end_date');
+    const description = data.get('description');
     
     if (!id || !name || !start_date || !end_date) {
       return new Response('Missing fields', { status: 400 });
     }
 
-    const { success } = await db.prepare('UPDATE trips SET name = ?, start_date = ?, end_date = ? WHERE id = ?')
-      .bind(name, start_date, end_date, id)
+    const { success } = await db.prepare('UPDATE trips SET name = ?, start_date = ?, end_date = ?, description = ? WHERE id = ?')
+      .bind(name, start_date, end_date, description, id)
       .run();
 
     if (success) {
@@ -51,13 +52,14 @@ export const POST: APIRoute = async ({ request }) => {
   const name = data.get('name');
   const start_date = data.get('start_date');
   const end_date = data.get('end_date');
+  const description = data.get('description');
   
   if (!name || !start_date || !end_date) {
     return new Response('Missing fields', { status: 400 });
   }
 
-  const { success } = await db.prepare('INSERT INTO trips (name, start_date, end_date) VALUES (?, ?, ?)')
-    .bind(name, start_date, end_date)
+  const { success } = await db.prepare('INSERT INTO trips (name, start_date, end_date, description) VALUES (?, ?, ?, ?)')
+    .bind(name, start_date, end_date, description)
     .run();
   
   if (success) {
