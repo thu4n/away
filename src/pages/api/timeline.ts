@@ -10,8 +10,9 @@ export const POST: APIRoute = async ({ request }) => {
   
   if (action === 'delete') {
     const id = data.get('id');
+    const day_number = data.get('day_number') || '1';
     await db.prepare('DELETE FROM timeline_items WHERE id = ?').bind(id).run();
-    return new Response(null, { status: 302, headers: { Location: `/trip/${trip_id}` } });
+    return new Response(null, { status: 302, headers: { Location: `/trip/${trip_id}?tab=timeline&day=${day_number}` } });
   }
 
   const day_number = data.get('day_number');
@@ -31,7 +32,7 @@ export const POST: APIRoute = async ({ request }) => {
     ).bind(day_number, time_mark, title, maps_url || null, description || null, id).run();
 
     if (success) {
-      return new Response(null, { status: 302, headers: { Location: `/trip/${trip_id}` } });
+      return new Response(null, { status: 302, headers: { Location: `/trip/${trip_id}?tab=timeline&day=${day_number}` } });
     }
     return new Response('Error updating timeline item', { status: 500 });
   }
@@ -47,7 +48,7 @@ export const POST: APIRoute = async ({ request }) => {
   ).bind(trip_id, day_number, time_mark, title, maps_url || null, description || null).run();
   
   if (success) {
-    return new Response(null, { status: 302, headers: { Location: `/trip/${trip_id}` } });
+    return new Response(null, { status: 302, headers: { Location: `/trip/${trip_id}?tab=timeline&day=${day_number}` } });
   }
   return new Response('Error adding timeline item', { status: 500 });
 };
