@@ -4,82 +4,82 @@
 
 Away uses **Tailwind CSS v4** loaded via the Vite plugin. All Tailwind utility classes are available in `.astro` files directly.
 
-Global styles and CSS custom properties live in:
+Global styles, custom variables, and `@theme` definitions live in:
 
 ```
 src/styles/global.css
 ```
 
-This file is imported by `Layout.astro` and applies to every page.
+This file is imported by `Layout.astro` and applies to every page globally.
 
 ---
 
 ## Color Scheme
 
-The color scheme is based on **CSS custom properties** combined with Tailwind classes.
+The app uses a bespoke **Sapphire Nightfall Whisper** palette implemented via CSS variables mapped to Tailwind `@theme`.
 
-### CSS Custom Properties (global.css)
+### Base Color Tokens (global.css)
 
 ```css
+@theme {
+  --color-whisper: var(--whisper);
+  --color-sky-mist: var(--sky-mist);
+  --color-sapphire: var(--sapphire);
+  --color-nightfall: var(--nightfall);
+  --color-pale-sapphire: var(--pale-sapphire);
+  --color-ocean: var(--ocean);
+  --color-white: #ffffff;
+}
+
 :root {
-  --bg-color: #f8fafc;     /* Page background (light) */
-  --card-bg: #ffffff;       /* Card backgrounds (light) */
-  --text-color: #0f172a;    /* Primary text (light) */
-  --accent: #3b82f6;        /* Accent / brand color (light) */
+  /* LIGHT MODE (Default) */
+  --whisper: #ebf4fa;         /* Lightest airy blue bg */
+  --pale-sapphire: #f5f9fd;   /* Clean white-blue card surface */
+  --sky-mist: #7ec8e3;        /* Soft sky blue accent */
+  --sapphire: #1d5fa8;        /* Core Sapphire blue (Primary) */
+  --nightfall: #0b1d39;       /* Deep navy text */
+  --ocean: #2a7ab5;           /* Hover blue */
+  
+  --bg-color: var(--whisper);
+  --card-bg: var(--pale-sapphire);
+  --text-color: var(--nightfall);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-color: #0f172a;    /* Page background (dark) */
-    --card-bg: #1e293b;     /* Card backgrounds (dark) */
-    --text-color: #f1f5f9;  /* Primary text (dark) */
-    --accent: #60a5fa;      /* Accent / brand color (dark) */
+    /* DARK MODE */
+    --whisper: #e6eef7;       /* Light text on dark bg */
+    --pale-sapphire: #112244; /* Deep navy card surface */
+    --sky-mist: #7ec8e3;      /* Airy blue */
+    --sapphire: #4f91d4;      /* Brighter Sapphire for dark mode primary */
+    --nightfall: #0b1d39;     /* Deepest midnight navy page bg */
+    --ocean: #2a7ab5;         /* Mid-ocean hover state */
+
+    --bg-color: #0b1d39;
+    --card-bg: #112244;
+    --text-color: #e6eef7;
   }
 }
 ```
 
 ### Changing the Color Scheme
 
-To change the overall look and feel, edit these custom properties in `src/styles/global.css`:
+To overhaul the theme palette, edit the base CSS variables in `:root` and the dark mode `@media` block in `src/styles/global.css`.
 
-| What to change            | Where                                          | Example                     |
-| ------------------------- | ---------------------------------------------- | --------------------------- |
-| Page background           | `--bg-color`                                   | `#fefce8` (warm cream)      |
-| Card / surface color      | `--card-bg`                                    | `#fffbeb`                   |
-| Primary text              | `--text-color`                                 | `#1c1917`                   |
-| Accent / brand color      | `--accent`                                     | `#f97316` (orange)          |
-| Gradient on header        | `index.astro` → `bg-gradient-to-r from-* to-*` | Change Tailwind color names |
-| Summary banner gradient   | `[id].astro` → `from-indigo-500 to-purple-600` | Change Tailwind color names |
-| Primary action buttons    | Search for `bg-blue-600`                        | Replace with your color     |
-| Danger / delete buttons   | Search for `bg-red-600`                         | Replace with your color     |
+- `bg-sapphire` acts as your primary action color (buttons, pill filters).
+- `bg-ocean` is the standard hover color for intense elements.
+- `bg-pale-sapphire` and `dark:bg-nightfall/60` are used primarily as card backings.
+- Warning or destructive elements still use tailwind's native `red-600` and `amber-500` primitives.
 
-### Common Search-and-Replace Targets
-
-If you want to rebrand from blue to, say, emerald green:
-
-```bash
-# In your editor, find and replace across all .astro files:
-bg-blue-600  →  bg-emerald-600
-bg-blue-700  →  bg-emerald-700
-text-blue-600  →  text-emerald-600
-text-blue-500  →  text-emerald-500
-ring-blue-500  →  ring-emerald-500
-from-blue-500 to-indigo-600  →  from-emerald-500 to-teal-600
-```
-
-> **Important:** Dark mode variants (`dark:bg-blue-900/20`, etc.) should be updated too.
+> **Important:** Form inputs internally override `color: var(--text-color) !important;` during dark mode so white text remains visible inside `.bg-white` input shells that have been dimmed down.
 
 ---
 
 ## Dark Mode
 
-Dark mode is **automatic** — it follows the user's system preference via `prefers-color-scheme: dark`. There is no manual toggle.
+Dark mode is **automatic** — it strictly follows the user's system preference via `prefers-color-scheme: dark`. There is no manual toggle.
 
-To add a manual toggle, you would need to:
-1. Add a toggle button to `Layout.astro`
-2. Use a `<script>` to toggle a `dark` class on `<html>`
-3. Replace `@media (prefers-color-scheme: dark)` in `global.css` with `.dark` selectors
-4. Configure Tailwind's `darkMode: 'class'` strategy 
+The entire UI is decorated with `dark:` variants alongside standard classes (e.g. `border-gray-200 dark:border-slate-600`).
 
 ---
 
@@ -91,25 +91,21 @@ The app uses **Inter** from Google Fonts, loaded in `Layout.astro`:
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 ```
 
-To change the font:
-1. Update the Google Fonts link in `src/layouts/Layout.astro`
-2. Update the `font-family` in `src/styles/global.css` body rule
-
 ---
 
-## Special CSS Classes
+## Special Custom CSS Classes
 
 | Class           | Defined In     | Purpose                                         |
 | --------------- | -------------- | ----------------------------------------------- |
-| `.glassmorphism` | `global.css`  | Frosted glass effect for the bottom navbar       |
+| `.glassmorphism` | `global.css`  | Frosted glass effect for the sticky headers      |
 | `.scrollbar-none`| `global.css`  | Hides scrollbar on horizontal pill tab areas     |
-| `dialog`         | `global.css`  | Bottom-sheet positioning + slide-up animation    |
+| `dialog`         | `global.css`  | Bottom-sheet default positioning + sliding hook  |
 
 ---
 
 ## Currency Formatting
 
-Expenses are formatted using the `Intl.NumberFormat` API:
+Expenses are formatted using the native `Intl.NumberFormat` API directly in the Astro frontmatter:
 
 ```typescript
 const formatCurrency = (amount: number) => {
@@ -117,25 +113,17 @@ const formatCurrency = (amount: number) => {
 };
 ```
 
-To change the currency:
-1. Update the `currency` in `trip/[id].astro` → `formatCurrency` function
-2. Update the Dong symbol `₫` in the expense form input decorators
-3. Consider changing the `step` attribute on `<input type="number">` (currently `step="1000"` for VND)
+To swap to USD or EUR:
+1. Update `trip/[id].astro` → `formatCurrency` locale string.
+2. Update the floating Dong symbol `₫` inside the Expense creation form prefix to `$`.
+3. Adjust the `step="1000"` on the `<input type="number">` since USD increments functionally at `1` scale, not thousands.
 
 ---
 
 ## Date Formatting
 
-All dates are displayed in **DD/MM/YYYY** format using a shared helper:
-
+All dates are rendered natively bypassing `new Date()` quirks by manually dissecting UTC boundary strings. 
 ```typescript
-const formatDate = (date: string | Date) => {
-  const d = new Date(date);
-  const day = d.getDate().toString().padStart(2, '0');
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
-};
+const formatDate = (date: string | Date) => { ... }
 ```
-
-This helper is defined independently in both `index.astro` and `trip/[id].astro`. If you want to change the format, update it in both files.
+You can modify this helper locally within `index.astro` and `trip/[id].astro` to manipulate your preferred `DD/MMM/YYYY` structure.

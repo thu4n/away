@@ -12,33 +12,33 @@
 npm install
 ```
 
-## 2. Initialize the Local Database
+## 2. Initialize the Local Databases
 
-Away uses **Cloudflare D1** (SQLite-based) and **Cloudflare R2** (S3-compatible storage). For local development, Wrangler emulates both automatically.
+Away seamlessly meshes alongside **Cloudflare D1** (SQLite database) and **Cloudflare R2** (Blob Object Storage). For local development, Wrangler emulates both of these completely offline using `workerd` automatically.
 
-1. **Initialize the Database:**
+1. **Initialize the Document Storage Database (D1):**
    ```bash
-   # Create the schema
+   # Execute schema to create tables structure locally
    npx wrangler d1 execute away-db --local --file=schema.sql
 
-   # Populate with sample data
+   # Populate with baseline sample data
    npx wrangler d1 execute away-db --local --file=seed.sql
    ```
 
-2. **Initialize R2 Storage:**
-   Local R2 storage is created on-the-fly when you first upload a file via `npm run dev`. You don't need to run a manual create command for local buckets.
+2. **Initialize Object Storage Bucket (R2):**
+   Local R2 storage architecture is instantiated on-the-fly when you first upload an Expense photo locally via `npm run dev` -- you do NOT need to execute a manual create command for the local buckets. It just works.
 
-> **Tip:** If you ever need a fresh database, just re-run both commands. `schema.sql` already contains `DROP TABLE IF EXISTS` statements.
+> **Tip:** If you ever need a fresh database wiping everything locally, just re-run the `schema.sql` command above, as it possesses `DROP TABLE IF EXISTS` operations.
 
 ## 3. Run the Dev Server
 
-The `dev` script performs **two steps in sequence**: it builds the Astro project, then starts a local Wrangler dev server.
+The `dev` script automatically launches **two concurrent environments in sequence**: compiling the Astro project, and instantiating the local Wrangler dev server.
 
 ```bash
 npm run dev
 ```
 
-The app will be available at **http://localhost:8787**.
+The app will be booted up at **http://localhost:8787**.
 
 ### Common Startup Error
 
@@ -48,7 +48,7 @@ If wrangler crashes with:
 ENOENT: no such file or directory, scandir '/path/to/away/dist/client'
 ```
 
-This happens when the dev server auto-reloads because a file was saved while it was already running. **The solution is simply to stop the server (Ctrl+C) and re-run `npm run dev`.** This is a known wrangler quirk with the Astro + Cloudflare adapter — the build produces a server-only output, but wrangler briefly looks for a `dist/client/` directory during hot-reload.
+This happens when the dev server auto-reloads because you hot-saved a file while the build was syncing. **The solution is to forcibly stop the server (Ctrl+C) and cleanly restart `npm run dev`.** This is extremely common with the Astro `+` Cloudflare adapter configuration since the compiler occasionally outruns Wrangler's cache.
 
 ## 4. Build Only (No Dev Server)
 
@@ -56,12 +56,14 @@ This happens when the dev server auto-reloads because a file was saved while it 
 npm run build
 ```
 
-This creates the production output in `dist/`. Useful for verifying that the project compiles before pushing changes.
+This constructs a pure production output payload positioned in the `dist/` directory, perfect for validating that the project compiles safely prior to pushing any new features.
 
 ## 5. Deploy to Cloudflare
 
+Deployment handles pushing the built bundles natively onto the Cloudflare Edge network.
+
 ```bash
-npx wrangler deploy
+npx wrangler pages deploy dist/
 ```
 
-Make sure you've configured `wrangler.jsonc` with a real `database_id` for your D1 database before deploying.
+Make absolutely certain you have matched `wrangler.jsonc` structurally with your production `database_id` and production R2 `bucket_name` bindings.

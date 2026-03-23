@@ -6,8 +6,7 @@ CREATE TABLE trips (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    description TEXT
+    end_date DATE NOT NULL
 );
 
 CREATE TABLE timeline_items (
