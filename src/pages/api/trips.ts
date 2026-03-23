@@ -15,8 +15,12 @@ export const GET: APIRoute = async () => {
 };
 
 export const POST: APIRoute = async ({ request }) => {
-  const db = (env as any).DB;
-  const data = await request.formData();
+  try {
+    const db = (env as any).DB;
+    if (!db) {
+      return new Response('DB binding not found', { status: 500 });
+    }
+    const data = await request.formData();
   
   const action = data.get('action'); // 'create' or 'delete'
   
@@ -31,20 +35,17 @@ export const POST: APIRoute = async ({ request }) => {
     const name = data.get('name');
     const start_date = data.get('start_date');
     const end_date = data.get('end_date');
-    const description = data.get('description');
+    const description = data.get('description'); // Not in DB, but may catch from form if not removed yet
     
     if (!id || !name || !start_date || !end_date) {
       return new Response('Missing fields', { status: 400 });
     }
 
-    const { success } = await db.prepare('UPDATE trips SET name = ?, start_date = ?, end_date = ?, description = ? WHERE id = ?')
-      .bind(name, start_date, end_date, description, id)
+    await db.prepare('UPDATE trips SET name = ?, start_date = ?, end_date = ? WHERE id = ?')
+      .bind(name, start_date, end_date, id)
       .run();
 
-    if (success) {
-      return new Response(null, { status: 302, headers: { Location: '/' } });
-    }
-    return new Response('Error updating trip', { status: 500 });
+    return new Response(null, { status: 302, headers: { Location: '/' } });
   }
 
   // Create
@@ -52,18 +53,22 @@ export const POST: APIRoute = async ({ request }) => {
   const name = data.get('name');
   const start_date = data.get('start_date');
   const end_date = data.get('end_date');
-  const description = data.get('description');
   
   if (!name || !start_date || !end_date) {
     return new Response('Missing fields', { status: 400 });
   }
 
-  const { success } = await db.prepare('INSERT INTO trips (name, start_date, end_date, description) VALUES (?, ?, ?, ?)')
-    .bind(name, start_date, end_date, description)
+  await db.prepare('INSERT INTO trips (name, start_date, end_date) VALUES (?, ?, ?)')
+    .bind(name, start_date, end_date)
     .run();
   
-  if (success) {
-    return new Response(null, { status: 302, headers: { Location: '/' } });
+  return new Response(null, { status: 302, headers: { Location: '/' } });
+
+  } catch (err: any) {
+    console.error('[POST /api/trips] Error:', err?.message ?? err);
+    return new Response(JSON.stringify({ error: err?.message ?? 'Unknown error' }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-  return new Response('Error creating trip', { status: 500 });
 };
