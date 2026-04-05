@@ -59,7 +59,7 @@ const activeDayItems = timelineByDay[activeDay] ?? [];
 const totalExpenses = expenses.reduce((acc: number, curr: any) => acc + curr.amount, 0);
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 3 }).format(amount);
 };
 
 // Expense filtering
@@ -430,7 +430,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <span class="text-gray-500 font-medium">₫</span>
               </div>
-              <input type="number" step="1000" inputmode="numeric" name="amount" required class="block w-full pl-7 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all font-medium text-lg" placeholder="0" />
+              <input type="number" step="any" inputmode="decimal" name="amount" required class="block w-full pl-7 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all font-medium text-lg" placeholder="0" />
             </div>
           </div>
           <div class="flex-1">
@@ -487,7 +487,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <span class="text-gray-500 font-medium">₫</span>
               </div>
-              <input type="number" step="1000" inputmode="numeric" name="amount" id="edit-expense-amount" required class="block w-full pl-7 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all font-medium text-lg" placeholder="0" />
+              <input type="number" step="any" inputmode="decimal" name="amount" id="edit-expense-amount" required class="block w-full pl-7 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all font-medium text-lg" placeholder="0" />
             </div>
           </div>
           <div class="flex-1">
