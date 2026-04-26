@@ -7,7 +7,6 @@ A mobile-first trip planner and tracker built for small groups. Organize itinera
 - **Vertical Timeline** — Day-by-day activity tracking with native map integration.
 - **Expense Ledger** — Log costs and upload receipt photos securely to Cloudflare R2.
 - **Resources Hub** — Save useful travel links and embed YouTube/Instagram content.
-- **Privacy First** — Discourages sharing sensitive document URLs through active security reminders.
 - **Adaptive UI** — Smooth glassmorphism design that follows your system's light/dark mode.
 
 ## Tech Stack
@@ -31,7 +30,43 @@ For detailed technical guides, architecture deep-dives, and deployment steps, pl
 
 ---
 
-## Quick Start
+## Infrastructure & Deployment (Production)
+
+This project separates infrastructure provisioning from application deployment. It uses **Terraform** to scaffold backend resources and **Cloudflare Wrangler** to manage the Astro application code and assets.
+
+If you are deploying this for your own web app, follow these steps:
+
+### 1. Provision Infrastructure
+First, configure your deployment credentials by copying the environment template:
+
+```bash
+cp .env.example .env
+# Open .env and fill in your Cloudflare and AWS/R2 credentials
+```
+
+Then, navigate to the `infra/` folder, load your environment variables, and use Terraform to instantiate your Cloudflare D1 database, R2 bucket, and the empty Worker shell container:
+
+```bash
+cd infra/
+export $(grep -v '^#' ../.env | xargs)
+terraform init
+terraform plan
+terraform apply
+```
+
+### 2. Deploy Application Code
+Once Terraform finishes, grab your new Database ID and Bucket name, and update them in the top-level `wrangler.jsonc`. Then, let Wrangler build the Astro app and deploy the source code into your Worker:
+
+```bash
+cd ../
+npm install
+npm run build
+npx wrangler deploy
+```
+
+---
+
+## Local Development Quick Start
 
 ```bash
 npm install
