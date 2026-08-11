@@ -57,11 +57,16 @@ export const GET: APIRoute = async ({ request, url }) => {
       return `${yyyy}-${mm}-${dd}`;
     };
 
+    const formatVND = (amount: number) => {
+      if (isNaN(amount)) return '0 ₫';
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 3 }).format(amount);
+    };
+
     const lines: string[] = [];
 
     // SECTION 1: TRIP OVERVIEW
     lines.push('# TRIP OVERVIEW');
-    lines.push(['Trip ID', 'Trip Name', 'Start Date', 'End Date', 'Total Events', 'Total Expenses', 'Total Resources'].map(escapeCSV).join(','));
+    lines.push(['Trip ID', 'Trip Name', 'Start Date', 'End Date', 'Total Events', 'Total Expenses (VND)', 'Total Resources'].map(escapeCSV).join(','));
     const totalExpensesSum = (expenses || []).reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
     lines.push([
       trip.id,
@@ -69,7 +74,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       trip.start_date,
       trip.end_date,
       (timelineItems || []).length,
-      totalExpensesSum,
+      formatVND(totalExpensesSum),
       (resources || []).length
     ].map(escapeCSV).join(','));
     lines.push('');
@@ -91,14 +96,14 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     // SECTION 3: EXPENSES
     lines.push('# EXPENSES');
-    lines.push(['Expense ID', 'Date', 'Description', 'Amount', 'Linked Timeline Event', 'Receipt Photo URL'].map(escapeCSV).join(','));
+    lines.push(['Expense ID', 'Date', 'Description', 'Amount (VND)', 'Linked Timeline Event', 'Receipt Photo URL'].map(escapeCSV).join(','));
     for (const exp of (expenses || [])) {
       const receiptUrl = exp.image_key ? `${origin}/api/images/${exp.image_key}` : '';
       lines.push([
         exp.id,
         exp.expense_date || '',
         exp.description || '',
-        exp.amount,
+        formatVND(exp.amount || 0),
         exp.timeline_item_title || '',
         receiptUrl
       ].map(escapeCSV).join(','));
