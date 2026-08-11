@@ -79,28 +79,38 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
         </svg>
       </a>
       <h1 class="text-xl font-bold truncate">{tripResult.name}</h1>
-      <!-- + button shown conditionally -->
-      {currentTab === 'timeline' ? (
-        <button id="open-add-event" class="w-9 h-9 flex items-center justify-center bg-sapphire text-white rounded-full shadow-lg hover:bg-ocean active:scale-95 transition-all font-bold">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="white">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+      <!-- Action buttons (Export CSV & Add Item) -->
+      <div class="flex items-center space-x-2">
+        <a
+          href={`/api/export?id=${tripResult.id}`}
+          download
+          title="Export Trip to CSV"
+          class="w-9 h-9 flex items-center justify-center bg-pale-sapphire dark:bg-nightfall/60 text-sapphire dark:text-sky-mist rounded-full shadow border border-sky-mist/30 dark:border-sapphire/30 hover:bg-sky-mist/20 active:scale-95 transition-all"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-        </button>
-      ) : currentTab === 'expenses' ? (
-        <button id="open-add-expense" class="w-9 h-9 flex items-center justify-center bg-sapphire text-white rounded-full shadow-lg hover:bg-ocean active:scale-95 transition-all font-bold">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="white">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
-      ) : currentTab === 'resources' ? (
-        <button id="open-add-resource" class="w-9 h-9 flex items-center justify-center bg-sapphire text-white rounded-full shadow-lg hover:bg-ocean active:scale-95 transition-all font-bold">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="white">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
-      ) : (
-        <div class="w-9"></div>
-      )}
+        </a>
+        {currentTab === 'timeline' ? (
+          <button id="open-add-event" class="w-9 h-9 flex items-center justify-center bg-sapphire text-white rounded-full shadow-lg hover:bg-ocean active:scale-95 transition-all font-bold" title="Add Event">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="white">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        ) : currentTab === 'expenses' ? (
+          <button id="open-add-expense" class="w-9 h-9 flex items-center justify-center bg-sapphire text-white rounded-full shadow-lg hover:bg-ocean active:scale-95 transition-all font-bold" title="Add Expense">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="white">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        ) : currentTab === 'resources' ? (
+          <button id="open-add-resource" class="w-9 h-9 flex items-center justify-center bg-sapphire text-white rounded-full shadow-lg hover:bg-ocean active:scale-95 transition-all font-bold" title="Add Resource">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="white">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        ) : null}
+      </div>
     </div>
     
     <!-- Custom Segmented Control for Tabs -->

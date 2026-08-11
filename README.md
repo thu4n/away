@@ -27,6 +27,7 @@ For detailed technical guides, architecture deep-dives, and deployment steps, pl
 - **[Architecture](./docs/architecture.md)** — Request flow, directory structure, and database schema.
 - **[Styling & Theming](./docs/styling-guide.md)** — Customizing the Sapphire palette and typography.
 - **[Known Bugs & Gotchas](./docs/known-bugs.md)** — Troubleshooting common development issues.
+- **[GitHub Projects & Roadmap](./docs/github-projects.md)** — Feature issues, roadmap backlog, and GitHub CLI workflow.
 
 ---
 
@@ -71,6 +72,7 @@ npx wrangler deploy
 ```bash
 npm install
 npx wrangler d1 execute away-db --local --file=schema.sql
+npx wrangler d1 execute away-db --local --file=seed.sql
 npm run dev
 ```
 
