@@ -33,11 +33,11 @@ export const GET: APIRoute = async ({ request, url }) => {
        FROM expenses e
        LEFT JOIN timeline_items t ON e.timeline_item_id = t.id
        WHERE e.trip_id = ?
-       ORDER BY e.expense_date DESC, e.id ASC`
+       ORDER BY e.expense_date ASC, e.id ASC`
     ).bind(id).all();
 
     const { results: resources } = await db.prepare(
-      'SELECT * FROM trip_resources WHERE trip_id = ? ORDER BY created_at DESC'
+      'SELECT * FROM trip_resources WHERE trip_id = ? ORDER BY created_at ASC, id ASC'
     ).bind(id).all();
 
     const requestUrl = new URL(request.url);
@@ -66,10 +66,9 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     // SECTION 1: TRIP OVERVIEW
     lines.push('# TRIP OVERVIEW');
-    lines.push(['Trip ID', 'Trip Name', 'Start Date', 'End Date', 'Total Events', 'Total Expenses (VND)', 'Total Resources'].map(escapeCSV).join(','));
+    lines.push(['Trip Name', 'Start Date', 'End Date', 'Total Events', 'Total Expenses (VND)', 'Total Resources'].map(escapeCSV).join(','));
     const totalExpensesSum = (expenses || []).reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
     lines.push([
-      trip.id,
       trip.name,
       trip.start_date,
       trip.end_date,
@@ -81,9 +80,11 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     // SECTION 2: TIMELINE ITEMS
     lines.push('# ITINERARY & TIMELINE');
-    lines.push(['Day Number', 'Date', 'Time Mark', 'Event Title', 'Google Maps URL', 'Description'].map(escapeCSV).join(','));
+    lines.push(['No.', 'Day Number', 'Date', 'Time Mark', 'Event Title', 'Google Maps URL', 'Description'].map(escapeCSV).join(','));
+    let eventIdx = 1;
     for (const item of (timelineItems || [])) {
       lines.push([
+        eventIdx++,
         item.day_number,
         formatDateForDay(item.day_number),
         item.time_mark || '',
@@ -96,11 +97,12 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     // SECTION 3: EXPENSES
     lines.push('# EXPENSES');
-    lines.push(['Expense ID', 'Date', 'Description', 'Amount (VND)', 'Linked Timeline Event', 'Receipt Photo URL'].map(escapeCSV).join(','));
+    lines.push(['No.', 'Date', 'Description', 'Amount (VND)', 'Linked Timeline Event', 'Receipt Photo URL'].map(escapeCSV).join(','));
+    let expenseIdx = 1;
     for (const exp of (expenses || [])) {
       const receiptUrl = exp.image_key ? `${origin}/api/images/${exp.image_key}` : '';
       lines.push([
-        exp.id,
+        expenseIdx++,
         exp.expense_date || '',
         exp.description || '',
         formatVND(exp.amount || 0),
@@ -112,10 +114,11 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     // SECTION 4: RESOURCES HUB
     lines.push('# RESOURCES HUB');
-    lines.push(['Resource ID', 'Type', 'Title', 'URL / Link', 'Notes', 'Created At'].map(escapeCSV).join(','));
+    lines.push(['No.', 'Type', 'Title', 'URL / Link', 'Notes', 'Created At'].map(escapeCSV).join(','));
+    let resourceIdx = 1;
     for (const res of (resources || [])) {
       lines.push([
-        res.id,
+        resourceIdx++,
         res.type || '',
         res.title || '',
         res.url || '',
