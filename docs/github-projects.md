@@ -14,6 +14,7 @@ Feature requests and tasks are tracked via [GitHub Issues](https://github.com/th
 | [#9](https://github.com/thu4n/away/issues/9) | `feat: Add manual Theme Switcher (Light / Dark / System)` | Open |
 | [#10](https://github.com/thu4n/away/issues/10) | `feat: Group Expense Bill Splitting & Settlement Summary` | Open |
 | [#11](https://github.com/thu4n/away/issues/11) | `feat: Multi-Currency Support for Trips & Expenses (SGD, USD, VND)` | Open |
+| [#12](https://github.com/thu4n/away/issues/12) | `feat: Optional Target Trip Budget & Spend Progress Bar` | Open |
 
 ---
 
