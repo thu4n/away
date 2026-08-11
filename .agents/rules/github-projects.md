@@ -40,3 +40,4 @@ gh project item-edit --id <item_id> --field-id <status_field_id> --single-select
 - [#10: feat: Group Expense Bill Splitting & Settlement Summary](https://github.com/thu4n/away/issues/10)
 - [#11: feat: Multi-Currency Support for Trips & Expenses (SGD, USD, VND)](https://github.com/thu4n/away/issues/11)
 - [#12: feat: Optional Target Trip Budget & Spend Progress Bar](https://github.com/thu4n/away/issues/12)
+- [#13: feat: User Authentication & Role-Based Trip Permissions via Google OAuth 2.0](https://github.com/thu4n/away/issues/13)

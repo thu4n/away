@@ -15,6 +15,7 @@ Feature requests and tasks are tracked via [GitHub Issues](https://github.com/th
 | [#10](https://github.com/thu4n/away/issues/10) | `feat: Group Expense Bill Splitting & Settlement Summary` | Open |
 | [#11](https://github.com/thu4n/away/issues/11) | `feat: Multi-Currency Support for Trips & Expenses (SGD, USD, VND)` | Open |
 | [#12](https://github.com/thu4n/away/issues/12) | `feat: Optional Target Trip Budget & Spend Progress Bar` | Open |
+| [#13](https://github.com/thu4n/away/issues/13) | `feat: User Authentication & Role-Based Trip Permissions via Google OAuth 2.0` | Open |
 
 ---
 
