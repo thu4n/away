@@ -35,14 +35,14 @@ export const POST: APIRoute = async ({ request }) => {
     const name = data.get('name');
     const start_date = data.get('start_date');
     const end_date = data.get('end_date');
-    const description = data.get('description'); // Not in DB, but may catch from form if not removed yet
+    const base_currency = (data.get('base_currency') as string) || 'VND';
     
     if (!id || !name || !start_date || !end_date) {
       return new Response('Missing fields', { status: 400 });
     }
 
-    await db.prepare('UPDATE trips SET name = ?, start_date = ?, end_date = ? WHERE id = ?')
-      .bind(name, start_date, end_date, id)
+    await db.prepare('UPDATE trips SET name = ?, start_date = ?, end_date = ?, base_currency = ? WHERE id = ?')
+      .bind(name, start_date, end_date, base_currency, id)
       .run();
 
     return new Response(null, { status: 302, headers: { Location: '/' } });
@@ -53,13 +53,14 @@ export const POST: APIRoute = async ({ request }) => {
   const name = data.get('name');
   const start_date = data.get('start_date');
   const end_date = data.get('end_date');
+  const base_currency = (data.get('base_currency') as string) || 'VND';
   
   if (!name || !start_date || !end_date) {
     return new Response('Missing fields', { status: 400 });
   }
 
-  await db.prepare('INSERT INTO trips (name, start_date, end_date) VALUES (?, ?, ?)')
-    .bind(name, start_date, end_date)
+  await db.prepare('INSERT INTO trips (name, start_date, end_date, base_currency) VALUES (?, ?, ?, ?)')
+    .bind(name, start_date, end_date, base_currency)
     .run();
   
   return new Response(null, { status: 302, headers: { Location: '/' } });
