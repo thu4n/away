@@ -6,7 +6,8 @@ CREATE TABLE trips (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     start_date DATE NOT NULL,
-    end_date DATE NOT NULL
+    end_date DATE NOT NULL,
+    base_currency TEXT NOT NULL DEFAULT 'VND'
 );
 
 CREATE TABLE timeline_items (
@@ -26,7 +27,10 @@ CREATE TABLE expenses (
     amount REAL NOT NULL,
     description TEXT NOT NULL,
     expense_date DATE NOT NULL,
-    image_key TEXT
+    image_key TEXT,
+    currency TEXT NOT NULL DEFAULT 'VND',
+    exchange_rate REAL NOT NULL DEFAULT 1.0,
+    base_amount REAL
 );
 
 CREATE TABLE trip_resources (

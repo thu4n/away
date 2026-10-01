@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
+import { formatCurrency } from '../../utils/currency';
 
 function escapeCSV(val: any): string {
   if (val === null || val === undefined) return '""';
@@ -23,6 +24,8 @@ export const GET: APIRoute = async ({ request, url }) => {
     if (!trip) {
       return new Response('Trip not found', { status: 404 });
     }
+
+    const baseCurrency = trip.base_currency || 'VND';
 
     const { results: timelineItems } = await db.prepare(
       'SELECT * FROM timeline_items WHERE trip_id = ? ORDER BY day_number ASC, time_mark ASC'
@@ -57,23 +60,19 @@ export const GET: APIRoute = async ({ request, url }) => {
       return `${yyyy}-${mm}-${dd}`;
     };
 
-    const formatVND = (amount: number) => {
-      if (isNaN(amount)) return '0 ₫';
-      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 3 }).format(amount);
-    };
-
     const lines: string[] = [];
 
     // SECTION 1: TRIP OVERVIEW
     lines.push('# TRIP OVERVIEW');
-    lines.push(['Trip Name', 'Start Date', 'End Date', 'Total Events', 'Total Expenses (VND)', 'Total Resources'].map(escapeCSV).join(','));
-    const totalExpensesSum = (expenses || []).reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
+    lines.push(['Trip Name', 'Base Currency', 'Start Date', 'End Date', 'Total Events', `Total Expenses (${baseCurrency})`, 'Total Resources'].map(escapeCSV).join(','));
+    const totalExpensesSum = (expenses || []).reduce((acc: number, curr: any) => acc + (curr.base_amount ?? curr.amount ?? 0), 0);
     lines.push([
       trip.name,
+      baseCurrency,
       trip.start_date,
       trip.end_date,
       (timelineItems || []).length,
-      formatVND(totalExpensesSum),
+      formatCurrency(totalExpensesSum, baseCurrency),
       (resources || []).length
     ].map(escapeCSV).join(','));
     lines.push('');
@@ -97,15 +96,18 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     // SECTION 3: EXPENSES
     lines.push('# EXPENSES');
-    lines.push(['No.', 'Date', 'Description', 'Amount (VND)', 'Linked Timeline Event', 'Receipt Photo URL'].map(escapeCSV).join(','));
+    lines.push(['No.', 'Date', 'Description', 'Original Amount', 'Currency', `Converted Amount (${baseCurrency})`, 'Linked Timeline Event', 'Receipt Photo URL'].map(escapeCSV).join(','));
     let expenseIdx = 1;
     for (const exp of (expenses || [])) {
+      const expCurrency = exp.currency || baseCurrency;
       const receiptUrl = exp.image_key ? `${origin}/api/images/${exp.image_key}` : '';
       lines.push([
         expenseIdx++,
         exp.expense_date || '',
         exp.description || '',
-        formatVND(exp.amount || 0),
+        formatCurrency(exp.amount || 0, expCurrency),
+        expCurrency,
+        formatCurrency(exp.base_amount ?? exp.amount ?? 0, baseCurrency),
         exp.timeline_item_title || '',
         receiptUrl
       ].map(escapeCSV).join(','));

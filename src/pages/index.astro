@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { env } from "cloudflare:workers";
+import { SUPPORTED_CURRENCIES } from "../utils/currency";
 
 const db = (env as any).DB;
 const { results: trips } = await db
@@ -39,23 +40,28 @@ const formatDate = (date: string | Date) => {
             <h2 class="text-xl font-bold text-nightfall dark:text-whisper group-hover:text-sapphire dark:group-hover:text-sky-mist transition-colors">
               {trip.name}
             </h2>
-            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2 space-x-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              <span>
-                {formatDate(trip.start_date)} - {formatDate(trip.end_date)}
+            <div class="flex items-center justify-between mt-2">
+              <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <span>
+                  {formatDate(trip.start_date)} - {formatDate(trip.end_date)}
+                </span>
+              </div>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-sapphire/10 text-sapphire dark:bg-sky-mist/20 dark:text-sky-mist border border-sapphire/20">
+                {trip.base_currency || 'VND'}
               </span>
             </div>
 
@@ -67,6 +73,7 @@ const formatDate = (date: string | Date) => {
               data-name={trip.name}
               data-start={trip.start_date}
               data-end={trip.end_date}
+              data-currency={trip.base_currency || 'VND'}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -140,6 +147,22 @@ const formatDate = (date: string | Date) => {
               class="mt-1 block w-full rounded-xl border-sky-mist/30 dark:border-sapphire/30 bg-white dark:bg-nightfall/60 shadow-sm focus:border-sapphire focus:ring-sapphire px-4 py-3 text-base transition-colors"
             />
           </div>
+        </div>
+        <div>
+          <label
+            for="base_currency"
+            class="block text-sm font-medium text-nightfall/60 dark:text-whisper/60"
+            >Base Currency</label
+          >
+          <select
+            name="base_currency"
+            id="base_currency"
+            class="mt-1 block w-full rounded-xl border-sky-mist/30 dark:border-sapphire/30 bg-white dark:bg-nightfall/60 shadow-sm focus:border-sapphire focus:ring-sapphire px-4 py-3 text-base transition-colors text-nightfall dark:text-whisper"
+          >
+            {SUPPORTED_CURRENCIES.map((curr) => (
+              <option value={curr.code}>{curr.code} — {curr.name}</option>
+            ))}
+          </select>
         </div>
         <button
           type="submit"
@@ -225,6 +248,22 @@ const formatDate = (date: string | Date) => {
             />
           </div>
         </div>
+        <div>
+          <label
+            for="edit_base_currency"
+            class="block text-sm font-medium text-nightfall/60 dark:text-whisper/60"
+            >Base Currency</label
+          >
+          <select
+            name="base_currency"
+            id="edit_base_currency"
+            class="mt-1 block w-full rounded-xl border-sky-mist/30 dark:border-sapphire/30 bg-white dark:bg-nightfall/60 shadow-sm focus:border-sapphire focus:ring-sapphire px-4 py-3 text-base transition-colors text-nightfall dark:text-whisper"
+          >
+            {SUPPORTED_CURRENCIES.map((curr) => (
+              <option value={curr.code}>{curr.code} — {curr.name}</option>
+            ))}
+          </select>
+        </div>
         <div class="pt-4 flex flex-col gap-2">
           <button
             type="submit"
@@ -254,6 +293,7 @@ const formatDate = (date: string | Date) => {
         const name = target.getAttribute("data-name");
         const start = target.getAttribute("data-start");
         const end = target.getAttribute("data-end");
+        const currency = target.getAttribute("data-currency") || "VND";
 
         (document.getElementById("edit-trip-id") as HTMLInputElement).value =
           id || "";
@@ -263,6 +303,8 @@ const formatDate = (date: string | Date) => {
           start || "";
         (document.getElementById("edit_end_date") as HTMLInputElement).value =
           end || "";
+        (document.getElementById("edit_base_currency") as HTMLSelectElement).value =
+          currency;
 
         dialog.showModal();
       });

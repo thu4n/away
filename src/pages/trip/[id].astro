@@ -1,6 +1,12 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { env } from 'cloudflare:workers';
+import {
+  SUPPORTED_CURRENCIES,
+  formatCurrency,
+  getCurrencySymbol,
+  getReferenceRate
+} from '../../utils/currency';
 
 const { id } = Astro.params;
 const db = (env as any).DB;
@@ -9,6 +15,8 @@ const tripResult = await db.prepare('SELECT * FROM trips WHERE id = ?').bind(id)
 if (!tripResult) {
   return Astro.redirect('/404');
 }
+
+const baseCurrency = (tripResult.base_currency || 'VND').toUpperCase();
 
 const url = new URL(Astro.request.url);
 const currentTab = url.searchParams.get('tab') || 'timeline';
@@ -56,16 +64,45 @@ const activeDayParam = url.searchParams.get('day');
 const activeDay = activeDayParam ? Number(activeDayParam) : 1;
 const activeDayItems = timelineByDay[activeDay] ?? [];
 
-const totalExpenses = expenses.reduce((acc: number, curr: any) => acc + curr.amount, 0);
+const totalExpenses = expenses.reduce((acc: number, curr: any) => acc + (curr.base_amount ?? curr.amount ?? 0), 0);
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 3 }).format(amount);
+// Subtitle generator: indicates converted equivalent (defaults to VND or trip base)
+const getExpenseSubtitle = (exp: any): string | null => {
+  const expCurr = (exp.currency || baseCurrency).toUpperCase();
+  // Same currency as trip base and base is VND -> no conversion subtitle needed
+  if (expCurr === 'VND' && baseCurrency === 'VND') {
+    return null;
+  }
+  // Logged in VND but trip base is foreign (e.g. SGD or USD) -> show converted in trip base
+  if (expCurr === 'VND' && baseCurrency !== 'VND') {
+    const converted = exp.base_amount ?? (exp.amount * getReferenceRate('VND', baseCurrency));
+    return `≈ ${formatCurrency(converted, baseCurrency)}`;
+  }
+  // Foreign expense on a VND trip -> show converted in VND
+  if (baseCurrency === 'VND') {
+    const converted = exp.base_amount ?? (exp.amount * getReferenceRate(expCurr, 'VND'));
+    return `≈ ${formatCurrency(converted, 'VND')}`;
+  }
+  // Foreign expense on a foreign trip (e.g. SGD expense on SGD trip) -> show preferred VND subtitle
+  if (expCurr === 'SGD') {
+    return `≈ ${formatCurrency(exp.amount * 19000, 'VND')}`;
+  }
+  if (expCurr === 'USD') {
+    return `≈ ${formatCurrency(exp.amount * 25400, 'VND')}`;
+  }
+  return null;
 };
 
 // Expense filtering
 const filterDate = url.searchParams.get('expense_date');
 const uniqueDates = [...new Set(expenses.map((e: any) => e.expense_date))].sort((a: any, b: any) => new Date(b).getTime() - new Date(a).getTime());
 const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date === filterDate) : expenses;
+
+const displayTotalBase = displayExpenses.reduce((acc: number, e: any) => acc + (e.base_amount ?? e.amount ?? 0), 0);
+const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
+  const curr = (e.currency || baseCurrency).toUpperCase();
+  return acc + (curr === 'VND' ? e.amount : e.amount * getReferenceRate(curr, 'VND'));
+}, 0);
 
 ---
 
@@ -338,8 +375,21 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
       <!-- Ledger Summary -->
       <div class="bg-gradient-to-br from-sapphire to-nightfall rounded-3xl p-6 text-whisper shadow-lg overflow-hidden relative">
         <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-sky-mist opacity-10 blur-2xl"></div>
-        <h2 class="text-sky-mist/80 font-medium text-sm">{filterDate ? `Spending — ${formatDate(filterDate)}` : 'Total Expenses'}</h2>
-        <div class="text-4xl font-extrabold mt-1">{formatCurrency(displayExpenses.reduce((acc: number, e: any) => acc + e.amount, 0))}</div>
+        <div class="flex justify-between items-start relative z-10">
+          <div>
+            <h2 class="text-sky-mist/80 font-medium text-sm">{filterDate ? `Spending — ${formatDate(filterDate)}` : 'Total Expenses'}</h2>
+            <div class="text-4xl font-extrabold mt-1">{formatCurrency(displayTotalBase, baseCurrency)}</div>
+            {baseCurrency !== 'VND' && (
+              <div class="text-base font-bold text-sky-mist/95 mt-1">
+                ≈ {formatCurrency(displayTotalVnd, 'VND')}
+              </div>
+            )}
+          </div>
+          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-white/10 text-whisper border border-white/20 backdrop-blur-sm">
+            Base: {baseCurrency}
+          </span>
+        </div>
+        <p class="text-[11px] text-sky-mist/70 mt-3 relative z-10">* Converted subtitles are for reference only and not exact current market rates.</p>
       </div>
 
       <!-- Date Filters -->
@@ -394,7 +444,12 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
                   </div>
                 </div>
                 <div class="text-right">
-                  <div class="font-bold text-lg text-gray-900 dark:text-white mb-2">{formatCurrency(exp.amount)}</div>
+                  <div class="font-bold text-lg text-gray-900 dark:text-white mb-0.5">{formatCurrency(exp.amount, exp.currency || baseCurrency)}</div>
+                  {getExpenseSubtitle(exp) && (
+                    <div class="text-xs font-semibold text-sapphire dark:text-sky-mist mb-1">
+                      {getExpenseSubtitle(exp)}
+                    </div>
+                  )}
                   <div class="flex gap-2 justify-end transition-opacity">
                     <button
                       class="edit-expense-btn p-2 text-sapphire/40 hover:text-sapphire rounded-full hover:bg-sky-mist/20 transition-colors"
@@ -404,6 +459,9 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
                       data-desc={exp.description}
                       data-timeline={exp.timeline_item_id || ''}
                       data-image={exp.image_key || ''}
+                      data-currency={exp.currency || baseCurrency}
+                      data-rate={exp.exchange_rate ?? 1.0}
+                      data-base-amount={exp.base_amount ?? exp.amount}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -433,20 +491,36 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
       <form method="POST" action="/api/expenses" enctype="multipart/form-data" class="space-y-4">
         <input type="hidden" name="trip_id" value={id} />
         
-        <div class="flex gap-3">
-          <div class="flex-1">
-            <label class="block text-xs font-medium text-gray-500 mb-1">Amount</label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span class="text-gray-500 font-medium">₫</span>
-              </div>
-              <input type="number" step="any" inputmode="decimal" name="amount" required class="block w-full pl-7 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all font-medium text-lg" placeholder="0" />
-            </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Currency</label>
+            <select
+              name="currency"
+              id="add-expense-currency"
+              class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sapphire transition-all text-sm font-semibold"
+            >
+              {SUPPORTED_CURRENCIES.map((c) => (
+                <option value={c.code} selected={c.code === baseCurrency}>
+                  {c.code} ({c.symbol})
+                </option>
+              ))}
+            </select>
           </div>
-          <div class="flex-1">
+          <div>
             <label class="block text-xs font-medium text-gray-500 mb-1">Date</label>
-            <input type="date" name="expense_date" required value={new Date().toISOString().split('T')[0]} class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 px-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all text-sm" />
+            <input type="date" name="expense_date" required value={new Date().toISOString().split('T')[0]} class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 px-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sapphire transition-all text-sm" />
           </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Amount</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span id="add-currency-symbol" class="text-gray-500 font-bold">{getCurrencySymbol(baseCurrency)}</span>
+            </div>
+            <input type="number" step="any" inputmode="decimal" name="amount" id="add-expense-amount" required class="block w-full pl-9 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sapphire transition-all font-medium text-lg" placeholder="0" />
+          </div>
+          <p id="add-currency-hint" class="text-[11px] text-gray-400 mt-1 hidden"></p>
         </div>
         
         <div>
@@ -490,20 +564,36 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
         <input type="hidden" name="id" id="edit-expense-id" />
         <input type="hidden" name="image_key" id="edit-expense-image" />
         
-        <div class="flex gap-3">
-          <div class="flex-1">
-            <label class="block text-xs font-medium text-gray-500 mb-1">Amount</label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span class="text-gray-500 font-medium">₫</span>
-              </div>
-              <input type="number" step="any" inputmode="decimal" name="amount" id="edit-expense-amount" required class="block w-full pl-7 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all font-medium text-lg" placeholder="0" />
-            </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Currency</label>
+            <select
+              name="currency"
+              id="edit-expense-currency"
+              class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sapphire transition-all text-sm font-semibold"
+            >
+              {SUPPORTED_CURRENCIES.map((c) => (
+                <option value={c.code}>
+                  {c.code} ({c.symbol})
+                </option>
+              ))}
+            </select>
           </div>
-          <div class="flex-1">
+          <div>
             <label class="block text-xs font-medium text-gray-500 mb-1">Date</label>
-            <input type="date" name="expense_date" id="edit-expense-date" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 px-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-green-500 transition-all text-sm" />
+            <input type="date" name="expense_date" id="edit-expense-date" required class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 px-3 focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sapphire transition-all text-sm" />
           </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Amount</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span id="edit-currency-symbol" class="text-gray-500 font-bold">{getCurrencySymbol(baseCurrency)}</span>
+            </div>
+            <input type="number" step="any" inputmode="decimal" name="amount" id="edit-expense-amount" required class="block w-full pl-9 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-sapphire transition-all font-medium text-lg" placeholder="0" />
+          </div>
+          <p id="edit-currency-hint" class="text-[11px] text-gray-400 mt-1 hidden"></p>
         </div>
         
         <div>
@@ -681,25 +771,64 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
     </dialog>
   )}
 
-  <script>
+  <script define:vars={{ baseCurrency }}>
+    const CURRENCY_SYMBOLS = {
+      VND: '₫',
+      SGD: 'S$',
+      USD: '$'
+    };
+
+    function wireCurrencyToggle(prefix, baseCurr) {
+      const select = document.getElementById(`${prefix}-expense-currency`);
+      const symbolSpan = document.getElementById(`${prefix}-currency-symbol`);
+      const hint = document.getElementById(`${prefix}-currency-hint`);
+      if (!select || !symbolSpan) return;
+
+      function updateHint() {
+        const curr = select.value;
+        symbolSpan.textContent = CURRENCY_SYMBOLS[curr] || curr;
+        if (!hint) return;
+        if (curr === baseCurr) {
+          hint.classList.add('hidden');
+          hint.textContent = '';
+        } else {
+          hint.classList.remove('hidden');
+          hint.textContent = `* Auto-converts to ${baseCurr} at reference rate`;
+        }
+      }
+
+      select.addEventListener('change', updateHint);
+      updateHint();
+    }
+
+    wireCurrencyToggle('add', baseCurrency);
+    wireCurrencyToggle('edit', baseCurrency);
+
     // Edit Expense wiring
     const editExpenseDialog = document.getElementById('edit-expense-dialog');
     const closeEditExpenseBtn = document.getElementById('close-edit-expense');
     if (closeEditExpenseBtn && editExpenseDialog) {
-       closeEditExpenseBtn.addEventListener('click', () => (editExpenseDialog as any).close());
-       editExpenseDialog.addEventListener('click', (e) => { if (e.target === editExpenseDialog) (editExpenseDialog as any).close(); });
+       closeEditExpenseBtn.addEventListener('click', () => editExpenseDialog.close());
+       editExpenseDialog.addEventListener('click', (e) => { if (e.target === editExpenseDialog) editExpenseDialog.close(); });
     }
     document.querySelectorAll('.edit-expense-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const target = e.currentTarget as HTMLButtonElement;
-        (document.getElementById('edit-expense-id') as HTMLInputElement).value = target.dataset.id || '';
-        (document.getElementById('edit-expense-amount') as HTMLInputElement).value = target.dataset.amount || '';
-        (document.getElementById('edit-expense-date') as HTMLInputElement).value = target.dataset.date || '';
-        (document.getElementById('edit-expense-desc') as HTMLInputElement).value = target.dataset.desc || '';
-        (document.getElementById('edit-expense-timeline') as unknown as HTMLSelectElement).value = target.dataset.timeline || '';
+        const target = e.currentTarget;
+        document.getElementById('edit-expense-id').value = target.dataset.id || '';
+        document.getElementById('edit-expense-amount').value = target.dataset.amount || '';
+        document.getElementById('edit-expense-date').value = target.dataset.date || '';
+        document.getElementById('edit-expense-desc').value = target.dataset.desc || '';
+        document.getElementById('edit-expense-timeline').value = target.dataset.timeline || '';
+
+        const curr = target.dataset.currency || baseCurrency;
+        const currSelect = document.getElementById('edit-expense-currency');
+        if (currSelect) {
+          currSelect.value = curr;
+          currSelect.dispatchEvent(new Event('change'));
+        }
 
         const imageKey = target.dataset.image || '';
-        (document.getElementById('edit-expense-image') as HTMLInputElement).value = imageKey;
+        document.getElementById('edit-expense-image').value = imageKey;
         
         const previewDiv = document.getElementById('edit-expense-image-preview');
         if (previewDiv) {
@@ -712,7 +841,7 @@ const displayExpenses = filterDate ? expenses.filter((e: any) => e.expense_date 
           }
         }
 
-        (editExpenseDialog as any)?.showModal();
+        editExpenseDialog?.showModal();
       });
     });
   </script>
