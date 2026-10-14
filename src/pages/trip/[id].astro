@@ -701,30 +701,85 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
         <!-- Split Among Checkboxes -->
         {members.length > 0 && (
           <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <label class="block text-xs font-medium text-gray-500">Split Between</label>
-              <button
-                type="button"
-                id="toggle-all-add-split"
-                class="text-[11px] text-sapphire dark:text-sky-mist font-semibold hover:underline"
-              >
-                Deselect All
-              </button>
-            </div>
-            <div class="grid grid-cols-2 gap-2" id="add-split-checkboxes">
-              {members.map((m: any) => (
-                <label class="flex items-center gap-2 p-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 text-xs">
-                  <input
-                    type="checkbox"
-                    name="split_among"
-                    value={m.name}
-                    checked
-                    class="rounded border-gray-300 text-sapphire focus:ring-sapphire"
-                  />
-                  <span class="truncate font-medium text-gray-800 dark:text-gray-200">{m.name}</span>
-                </label>
-              ))}
-            </div>
+            {members.length <= 4 ? (
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label class="block text-xs font-medium text-gray-500">Split Between</label>
+                  <button
+                    type="button"
+                    id="toggle-all-add-split"
+                    class="text-[11px] text-sapphire dark:text-sky-mist font-semibold hover:underline"
+                  >
+                    Deselect All
+                  </button>
+                </div>
+                <div class="grid grid-cols-2 gap-2" id="add-split-checkboxes">
+                  {members.map((m: any) => (
+                    <label class="flex items-center gap-2 p-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 text-xs">
+                      <input
+                        type="checkbox"
+                        name="split_among"
+                        value={m.name}
+                        checked
+                        class="rounded border-gray-300 text-sapphire focus:ring-sapphire"
+                      />
+                      <span class="truncate font-medium text-gray-800 dark:text-gray-200">{m.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Split Between</label>
+                <details class="group rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 transition-all">
+                  <summary class="flex items-center justify-between px-3 py-2.5 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none text-sm font-medium text-gray-900 dark:text-white">
+                    <span class="flex items-center gap-2 truncate">
+                      <span class="text-sapphire dark:text-sky-mist">👥</span>
+                      <span id="add-split-summary-label">All ({members.length}) members</span>
+                    </span>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      <span class="text-xs text-sapphire dark:text-sky-mist font-semibold">Change</span>
+                      <svg class="h-4 w-4 text-gray-400 group-open:rotate-180 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </summary>
+                  <div class="p-2.5 border-t border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800">
+                    <div class="flex items-center justify-between pb-2 mb-1.5 border-b border-gray-100 dark:border-slate-700">
+                      <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400" id="add-split-count-badge">
+                        {members.length} of {members.length} selected
+                      </span>
+                      <button
+                        type="button"
+                        id="toggle-all-add-split"
+                        class="text-[11px] text-sapphire dark:text-sky-mist font-bold hover:underline"
+                      >
+                        Deselect All
+                      </button>
+                    </div>
+                    <div class="max-h-44 overflow-y-auto space-y-1 pr-0.5 divide-y divide-gray-50 dark:divide-slate-700/50" id="add-split-checkboxes">
+                      {members.map((m: any) => (
+                        <label class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer text-xs transition-colors">
+                          <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-6 h-6 rounded-full bg-sapphire/10 dark:bg-sky-mist/20 text-sapphire dark:text-sky-mist font-bold text-[10px] flex items-center justify-center shrink-0">
+                              {m.name.charAt(0).toUpperCase()}
+                            </span>
+                            <span class="truncate font-medium text-gray-800 dark:text-gray-200">{m.name}</span>
+                          </div>
+                          <input
+                            type="checkbox"
+                            name="split_among"
+                            value={m.name}
+                            checked
+                            class="rounded border-gray-300 text-sapphire focus:ring-sapphire w-4 h-4 ml-2"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </details>
+              </div>
+            )}
           </div>
         )}
 
@@ -821,29 +876,83 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
         <!-- Split Among Checkboxes -->
         {members.length > 0 && (
           <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <label class="block text-xs font-medium text-gray-500">Split Between</label>
-              <button
-                type="button"
-                id="toggle-all-edit-split"
-                class="text-[11px] text-sapphire dark:text-sky-mist font-semibold hover:underline"
-              >
-                Select All
-              </button>
-            </div>
-            <div class="grid grid-cols-2 gap-2" id="edit-split-checkboxes">
-              {members.map((m: any) => (
-                <label class="flex items-center gap-2 p-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 text-xs">
-                  <input
-                    type="checkbox"
-                    name="split_among"
-                    value={m.name}
-                    class="edit-split-box rounded border-gray-300 text-sapphire focus:ring-sapphire"
-                  />
-                  <span class="truncate font-medium text-gray-800 dark:text-gray-200">{m.name}</span>
-                </label>
-              ))}
-            </div>
+            {members.length <= 4 ? (
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label class="block text-xs font-medium text-gray-500">Split Between</label>
+                  <button
+                    type="button"
+                    id="toggle-all-edit-split"
+                    class="text-[11px] text-sapphire dark:text-sky-mist font-semibold hover:underline"
+                  >
+                    Select All
+                  </button>
+                </div>
+                <div class="grid grid-cols-2 gap-2" id="edit-split-checkboxes">
+                  {members.map((m: any) => (
+                    <label class="flex items-center gap-2 p-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 text-xs">
+                      <input
+                        type="checkbox"
+                        name="split_among"
+                        value={m.name}
+                        class="edit-split-box rounded border-gray-300 text-sapphire focus:ring-sapphire"
+                      />
+                      <span class="truncate font-medium text-gray-800 dark:text-gray-200">{m.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Split Between</label>
+                <details class="group rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 transition-all">
+                  <summary class="flex items-center justify-between px-3 py-2.5 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none text-sm font-medium text-gray-900 dark:text-white">
+                    <span class="flex items-center gap-2 truncate">
+                      <span class="text-sapphire dark:text-sky-mist">👥</span>
+                      <span id="edit-split-summary-label">All ({members.length}) members</span>
+                    </span>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      <span class="text-xs text-sapphire dark:text-sky-mist font-semibold">Change</span>
+                      <svg class="h-4 w-4 text-gray-400 group-open:rotate-180 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </summary>
+                  <div class="p-2.5 border-t border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800">
+                    <div class="flex items-center justify-between pb-2 mb-1.5 border-b border-gray-100 dark:border-slate-700">
+                      <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400" id="edit-split-count-badge">
+                        {members.length} of {members.length} selected
+                      </span>
+                      <button
+                        type="button"
+                        id="toggle-all-edit-split"
+                        class="text-[11px] text-sapphire dark:text-sky-mist font-bold hover:underline"
+                      >
+                        Select All
+                      </button>
+                    </div>
+                    <div class="max-h-44 overflow-y-auto space-y-1 pr-0.5 divide-y divide-gray-50 dark:divide-slate-700/50" id="edit-split-checkboxes">
+                      {members.map((m: any) => (
+                        <label class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700/50 cursor-pointer text-xs transition-colors">
+                          <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-6 h-6 rounded-full bg-sapphire/10 dark:bg-sky-mist/20 text-sapphire dark:text-sky-mist font-bold text-[10px] flex items-center justify-center shrink-0">
+                              {m.name.charAt(0).toUpperCase()}
+                            </span>
+                            <span class="truncate font-medium text-gray-800 dark:text-gray-200">{m.name}</span>
+                          </div>
+                          <input
+                            type="checkbox"
+                            name="split_among"
+                            value={m.name}
+                            class="edit-split-box rounded border-gray-300 text-sapphire focus:ring-sapphire w-4 h-4 ml-2"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </details>
+              </div>
+            )}
           </div>
         )}
 
@@ -1304,6 +1413,7 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
               cb.checked = splitList.includes(cb.value);
             });
           }
+          updateSplitSummary('edit');
         }
 
         const imageKey = target.dataset.image || '';
@@ -1324,6 +1434,36 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
       });
     });
 
+    // Helper to keep split summary label and count badge in sync
+    function updateSplitSummary(prefix) {
+      const checkboxes = document.querySelectorAll(prefix === 'add' ? '#add-split-checkboxes input[type="checkbox"]' : '.edit-split-box');
+      if (!checkboxes || checkboxes.length === 0) return;
+      const total = checkboxes.length;
+      const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+      
+      const summaryLabel = document.getElementById(`${prefix}-split-summary-label`);
+      const countBadge = document.getElementById(`${prefix}-split-count-badge`);
+      const toggleBtn = document.getElementById(`toggle-all-${prefix}-split`);
+
+      if (summaryLabel) {
+        if (checkedCount === total) {
+          summaryLabel.textContent = `All (${total}) members`;
+        } else if (checkedCount === 0) {
+          summaryLabel.textContent = 'None selected';
+        } else {
+          summaryLabel.textContent = `${checkedCount} of ${total} members`;
+        }
+      }
+
+      if (countBadge) {
+        countBadge.textContent = `${checkedCount} of ${total} selected`;
+      }
+
+      if (toggleBtn) {
+        toggleBtn.textContent = checkedCount > 0 ? 'Deselect All' : 'Select All';
+      }
+    }
+
     // Toggle split helpers
     const toggleAddSplitBtn = document.getElementById('toggle-all-add-split');
     if (toggleAddSplitBtn) {
@@ -1331,7 +1471,7 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
         const checkboxes = document.querySelectorAll('#add-split-checkboxes input[type="checkbox"]');
         const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
         checkboxes.forEach(cb => { cb.checked = !anyChecked; });
-        toggleAddSplitBtn.textContent = anyChecked ? 'Select All' : 'Deselect All';
+        updateSplitSummary('add');
       });
     }
 
@@ -1341,9 +1481,18 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
         const checkboxes = document.querySelectorAll('.edit-split-box');
         const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
         checkboxes.forEach(cb => { cb.checked = !anyChecked; });
-        toggleEditSplitBtn.textContent = anyChecked ? 'Select All' : 'Deselect All';
+        updateSplitSummary('edit');
       });
     }
+
+    // Attach real-time change listeners to split checkboxes
+    document.querySelectorAll('#add-split-checkboxes input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => updateSplitSummary('add'));
+    });
+    document.querySelectorAll('.edit-split-box').forEach(cb => {
+      cb.addEventListener('change', () => updateSplitSummary('edit'));
+    });
+    updateSplitSummary('add');
 
     // Copy settlement breakdown
     const copySettlementBtn = document.getElementById('copy-settlement-btn');
