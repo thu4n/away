@@ -120,6 +120,7 @@ See [`schema.sql`](../schema.sql) for the full DDL. Key constraints:
 - `expenses.image_key` — Stores proof receipt in R2 (e.g., `expenses/1-12345678-receipt.jpg`)
 - `expenses.paid_by` — Name of the trip participant who paid the expense
 - `expenses.split_among` — JSON array of participant names sharing the cost (defaults to all members if empty)
+- `trips.target_budget` — Optional target spend budget in base currency (e.g. 15000000.0)
 
 ---
 
@@ -138,19 +139,18 @@ Group expenses are settled using a minimum cash flow algorithm (`src/utils/settl
 
 ### `index.astro` — Trip Dashboard
 - Lists all trips ordered by start date
-- "Add Trip" form
+- "Add Trip" form (with optional target budget & banner image)
 - Edit button (pencil icon) on each trip card → opens Edit Trip dialog
 - Edit Trip dialog has both **Save Changes** and **Delete Trip** actions
 
 ### `trip/[id].astro` — Trip Detail
 - **Timeline tab**: Day-based pill navigation, vertical timeline with event cards
-- **Expenses tab**: Summary banner, filter pills (all/day), expense list supporting image proof modals, and Group Bill Splitting toolbar:
+- **Expenses tab**: Summary banner with optional target budget progress bar (% spent, total spent, remaining budget, and over-budget warnings), filter pills (all/day), expense list supporting image proof modals, and Group Bill Splitting toolbar:
   - **Members modal**: Add/remove trip participants (supports comma-separated bulk entry).
-  - **Split Bill / Settle Up modal**: Overview cards, net balances per member, and step-by-step transfer settlement instructions.
-  - One-click clipboard copy of the full settlement breakdown.
+  - **Split Bill / Settle Up modal**: Overview cards, member filter to view specific debtor payment transfers, net balances per member, and step-by-step transfer settlement instructions.
+  - One-click clipboard copy of full or filtered settlement breakdown.
 - **Resources tab**: Single-column flexible grid view for secure links, rendering embedded YouTube iframe players and Instagram posts
-- Bottom-sheet dialogs for adding/editing events and expenses
-- Dynamic `+` Sticky Button that invokes a different `Add {Item}` modal depending on your current tab.
+- Bottom-sheet dialogs for adding/editing events and expenses (with adaptive 2-column or compact multi-select dropdown for split attribution based on member count)
 
 ### API Routes (`src/pages/api/`)
 Most API files handle standard actions via a hidden `action` form field:

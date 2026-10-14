@@ -58,6 +58,10 @@ export const POST: APIRoute = async ({ request }) => {
       const start_date = data.get('start_date');
       const end_date = data.get('end_date');
       const base_currency = (data.get('base_currency') as string) || 'VND';
+      const target_budget_raw = data.get('target_budget');
+      const target_budget = target_budget_raw !== null && String(target_budget_raw).trim() !== ''
+        ? parseFloat(String(target_budget_raw).replace(/,/g, ''))
+        : null;
       let cover_image_key = (data.get('cover_image_key') as string) || null;
       const remove_cover_image = data.get('remove_cover_image') === 'true';
       const cover_image = data.get('cover_image') as File | null;
@@ -82,8 +86,8 @@ export const POST: APIRoute = async ({ request }) => {
         cover_image_key = new_key;
       }
 
-      await db.prepare('UPDATE trips SET name = ?, start_date = ?, end_date = ?, base_currency = ?, cover_image_key = ? WHERE id = ?')
-        .bind(name, start_date, end_date, base_currency, cover_image_key, id)
+      await db.prepare('UPDATE trips SET name = ?, start_date = ?, end_date = ?, base_currency = ?, cover_image_key = ?, target_budget = ? WHERE id = ?')
+        .bind(name, start_date, end_date, base_currency, cover_image_key, target_budget, id)
         .run();
 
       return new Response(null, { status: 302, headers: { Location: '/' } });
@@ -94,6 +98,10 @@ export const POST: APIRoute = async ({ request }) => {
     const start_date = data.get('start_date');
     const end_date = data.get('end_date');
     const base_currency = (data.get('base_currency') as string) || 'VND';
+    const target_budget_raw = data.get('target_budget');
+    const target_budget = target_budget_raw !== null && String(target_budget_raw).trim() !== ''
+      ? parseFloat(String(target_budget_raw).replace(/,/g, ''))
+      : null;
     const cover_image = data.get('cover_image') as File | null;
     
     if (!name || !start_date || !end_date) {
@@ -109,8 +117,8 @@ export const POST: APIRoute = async ({ request }) => {
       cover_image_key = new_key;
     }
 
-    await db.prepare('INSERT INTO trips (name, start_date, end_date, base_currency, cover_image_key) VALUES (?, ?, ?, ?, ?)')
-      .bind(name, start_date, end_date, base_currency, cover_image_key)
+    await db.prepare('INSERT INTO trips (name, start_date, end_date, base_currency, cover_image_key, target_budget) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(name, start_date, end_date, base_currency, cover_image_key, target_budget)
       .run();
     
     return new Response(null, { status: 302, headers: { Location: '/' } });

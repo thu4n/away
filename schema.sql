@@ -8,7 +8,8 @@ CREATE TABLE trips (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     base_currency TEXT NOT NULL DEFAULT 'VND',
-    cover_image_key TEXT
+    cover_image_key TEXT,
+    target_budget REAL
 );
 
 CREATE TABLE timeline_items (

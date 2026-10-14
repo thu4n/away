@@ -72,13 +72,14 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     // SECTION 1: TRIP OVERVIEW
     lines.push('# TRIP OVERVIEW');
-    lines.push(['Trip Name', 'Base Currency', 'Start Date', 'End Date', 'Participants', 'Total Events', `Total Expenses (${baseCurrency})`, 'Total Resources'].map(escapeCSV).join(','));
+    lines.push(['Trip Name', 'Base Currency', 'Start Date', 'End Date', 'Target Budget', 'Participants', 'Total Events', `Total Expenses (${baseCurrency})`, 'Total Resources'].map(escapeCSV).join(','));
     const totalExpensesSum = (expenses || []).reduce((acc: number, curr: any) => acc + (curr.base_amount ?? curr.amount ?? 0), 0);
     lines.push([
       trip.name,
       baseCurrency,
       trip.start_date,
       trip.end_date,
+      trip.target_budget ? formatCurrency(trip.target_budget, baseCurrency) : 'None',
       memberNames.join('; ') || 'None',
       (timelineItems || []).length,
       formatCurrency(totalExpensesSum, baseCurrency),
