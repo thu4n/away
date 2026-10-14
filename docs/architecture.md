@@ -119,7 +119,7 @@ See [`schema.sql`](../schema.sql) for the full DDL. Key constraints:
 - `timeline_items.image_key` — Stores event photo in R2 (e.g., `timeline/1-12345678-hotel.jpg`)
 - `expenses.image_key` — Stores proof receipt in R2 (e.g., `expenses/1-12345678-receipt.jpg`)
 - `expenses.paid_by` — Name of the trip participant who paid the expense
-- `expenses.split_among` — JSON array of participant names sharing the cost (defaults to all members if empty)
+- `expenses.split_among` — JSON array of participant names sharing the cost (`'[]'` if not split with anyone / paid for team; defaults to all members if NULL for legacy records)
 - `trips.target_budget` — Optional target spend budget in base currency (e.g. 15000000.0)
 
 ---

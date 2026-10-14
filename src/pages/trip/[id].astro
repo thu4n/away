@@ -653,15 +653,24 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
                         </span>
                       )}
                       {(() => {
-                        if (!exp.split_among) return null;
+                        if (exp.split_among === undefined || exp.split_among === null || exp.split_among === '') return null;
                         try {
                           const splitList = JSON.parse(exp.split_among);
-                          if (Array.isArray(splitList) && splitList.length > 0 && splitList.length < memberNames.length) {
-                            return (
-                              <span class="bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 px-1.5 py-0.5 rounded text-[10px] font-semibold">
-                                👥 Split ({splitList.length}/{memberNames.length})
-                              </span>
-                            );
+                          if (Array.isArray(splitList)) {
+                            if (splitList.length === 0) {
+                              return (
+                                <span class="bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 px-1.5 py-0.5 rounded text-[10px] font-semibold flex items-center gap-1">
+                                  🎁 Not split (Paid for team)
+                                </span>
+                              );
+                            }
+                            if (splitList.length > 0 && splitList.length < memberNames.length) {
+                              return (
+                                <span class="bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                                  👥 Split ({splitList.length}/{memberNames.length})
+                                </span>
+                              );
+                            }
                           }
                         } catch(e) {}
                         return null;
@@ -775,17 +784,28 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
         <!-- Split Among Checkboxes -->
         {members.length > 0 && (
           <div>
+            <input type="hidden" name="split_selector_active" value="1" />
             {members.length <= 4 ? (
               <div>
                 <div class="flex items-center justify-between mb-1.5">
                   <label class="block text-xs font-medium text-gray-500">Split Between</label>
-                  <button
-                    type="button"
-                    id="toggle-all-add-split"
-                    class="text-[11px] text-sapphire dark:text-sky-mist font-semibold hover:underline"
-                  >
-                    Deselect All
-                  </button>
+                  <div class="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      id="btn-add-split-all"
+                      class="text-[11px] text-sapphire dark:text-sky-mist font-semibold hover:underline"
+                    >
+                      All
+                    </button>
+                    <span class="text-gray-300 dark:text-gray-600 text-xs">·</span>
+                    <button
+                      type="button"
+                      id="btn-add-split-none"
+                      class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold hover:underline"
+                    >
+                      No one (Treat)
+                    </button>
+                  </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2" id="add-split-checkboxes">
                   {members.map((m: any) => (
@@ -801,6 +821,9 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
                     </label>
                   ))}
                 </div>
+                <p id="add-split-treat-note" class="hidden text-[11px] text-amber-600 dark:text-amber-400 font-medium mt-1.5 flex items-center gap-1">
+                  <span>🎁</span> Payer covers 100% (treated for the team, not split).
+                </p>
               </div>
             ) : (
               <div>
@@ -808,7 +831,7 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
                 <details class="group rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 transition-all">
                   <summary class="flex items-center justify-between px-3 py-2.5 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none text-sm font-medium text-gray-900 dark:text-white">
                     <span class="flex items-center gap-2 truncate">
-                      <span class="text-sapphire dark:text-sky-mist">👥</span>
+                      <span class="text-sapphire dark:text-sky-mist" id="add-split-summary-icon">👥</span>
                       <span id="add-split-summary-label">All ({members.length}) members</span>
                     </span>
                     <div class="flex items-center gap-1.5 shrink-0">
@@ -823,13 +846,23 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
                       <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400" id="add-split-count-badge">
                         {members.length} of {members.length} selected
                       </span>
-                      <button
-                        type="button"
-                        id="toggle-all-add-split"
-                        class="text-[11px] text-sapphire dark:text-sky-mist font-bold hover:underline"
-                      >
-                        Deselect All
-                      </button>
+                      <div class="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          id="btn-add-split-all-dropdown"
+                          class="text-[11px] text-sapphire dark:text-sky-mist font-bold hover:underline"
+                        >
+                          All
+                        </button>
+                        <span class="text-gray-300 dark:text-gray-600 text-xs">·</span>
+                        <button
+                          type="button"
+                          id="btn-add-split-none-dropdown"
+                          class="text-[11px] text-amber-600 dark:text-amber-400 font-bold hover:underline"
+                        >
+                          No one (Treat)
+                        </button>
+                      </div>
                     </div>
                     <div class="max-h-44 overflow-y-auto space-y-1 pr-0.5 divide-y divide-gray-50 dark:divide-slate-700/50" id="add-split-checkboxes">
                       {members.map((m: any) => (
@@ -850,6 +883,9 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
                         </label>
                       ))}
                     </div>
+                    <p id="add-split-treat-note-dropdown" class="hidden text-[11px] text-amber-600 dark:text-amber-400 font-medium pt-2 border-t border-gray-100 dark:border-slate-700 flex items-center gap-1">
+                      <span>🎁</span> Payer covers 100% (treated for the team, not split).
+                    </p>
                   </div>
                 </details>
               </div>
@@ -950,17 +986,28 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
         <!-- Split Among Checkboxes -->
         {members.length > 0 && (
           <div>
+            <input type="hidden" name="split_selector_active" value="1" />
             {members.length <= 4 ? (
               <div>
                 <div class="flex items-center justify-between mb-1.5">
                   <label class="block text-xs font-medium text-gray-500">Split Between</label>
-                  <button
-                    type="button"
-                    id="toggle-all-edit-split"
-                    class="text-[11px] text-sapphire dark:text-sky-mist font-semibold hover:underline"
-                  >
-                    Select All
-                  </button>
+                  <div class="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      id="btn-edit-split-all"
+                      class="text-[11px] text-sapphire dark:text-sky-mist font-semibold hover:underline"
+                    >
+                      All
+                    </button>
+                    <span class="text-gray-300 dark:text-gray-600 text-xs">·</span>
+                    <button
+                      type="button"
+                      id="btn-edit-split-none"
+                      class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold hover:underline"
+                    >
+                      No one (Treat)
+                    </button>
+                  </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2" id="edit-split-checkboxes">
                   {members.map((m: any) => (
@@ -975,6 +1022,9 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
                     </label>
                   ))}
                 </div>
+                <p id="edit-split-treat-note" class="hidden text-[11px] text-amber-600 dark:text-amber-400 font-medium mt-1.5 flex items-center gap-1">
+                  <span>🎁</span> Payer covers 100% (treated for the team, not split).
+                </p>
               </div>
             ) : (
               <div>
@@ -982,7 +1032,7 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
                 <details class="group rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 transition-all">
                   <summary class="flex items-center justify-between px-3 py-2.5 cursor-pointer list-none [&::-webkit-details-marker]:hidden select-none text-sm font-medium text-gray-900 dark:text-white">
                     <span class="flex items-center gap-2 truncate">
-                      <span class="text-sapphire dark:text-sky-mist">👥</span>
+                      <span class="text-sapphire dark:text-sky-mist" id="edit-split-summary-icon">👥</span>
                       <span id="edit-split-summary-label">All ({members.length}) members</span>
                     </span>
                     <div class="flex items-center gap-1.5 shrink-0">
@@ -997,13 +1047,23 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
                       <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400" id="edit-split-count-badge">
                         {members.length} of {members.length} selected
                       </span>
-                      <button
-                        type="button"
-                        id="toggle-all-edit-split"
-                        class="text-[11px] text-sapphire dark:text-sky-mist font-bold hover:underline"
-                      >
-                        Select All
-                      </button>
+                      <div class="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          id="btn-edit-split-all-dropdown"
+                          class="text-[11px] text-sapphire dark:text-sky-mist font-bold hover:underline"
+                        >
+                          All
+                        </button>
+                        <span class="text-gray-300 dark:text-gray-600 text-xs">·</span>
+                        <button
+                          type="button"
+                          id="btn-edit-split-none-dropdown"
+                          class="text-[11px] text-amber-600 dark:text-amber-400 font-bold hover:underline"
+                        >
+                          No one (Treat)
+                        </button>
+                      </div>
                     </div>
                     <div class="max-h-44 overflow-y-auto space-y-1 pr-0.5 divide-y divide-gray-50 dark:divide-slate-700/50" id="edit-split-checkboxes">
                       {members.map((m: any) => (
@@ -1023,6 +1083,9 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
                         </label>
                       ))}
                     </div>
+                    <p id="edit-split-treat-note-dropdown" class="hidden text-[11px] text-amber-600 dark:text-amber-400 font-medium pt-2 border-t border-gray-100 dark:border-slate-700 flex items-center gap-1">
+                      <span>🎁</span> Payer covers 100% (treated for the team, not split).
+                    </p>
                   </div>
                 </details>
               </div>
@@ -1516,19 +1579,19 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
         }
 
         const splitAmongRaw = target.dataset.splitAmong || '';
-        let splitList = [];
+        let splitList = null;
         try {
           if (splitAmongRaw) splitList = JSON.parse(splitAmongRaw);
         } catch(err) {}
 
         const editSplitBoxes = document.querySelectorAll('.edit-split-box');
         if (editSplitBoxes.length > 0) {
-          if (!splitAmongRaw || !Array.isArray(splitList) || splitList.length === 0) {
-            editSplitBoxes.forEach(cb => { cb.checked = true; });
-          } else {
+          if (Array.isArray(splitList)) {
             editSplitBoxes.forEach(cb => {
               cb.checked = splitList.includes(cb.value);
             });
+          } else {
+            editSplitBoxes.forEach(cb => { cb.checked = true; });
           }
           updateSplitSummary('edit');
         }
@@ -1551,7 +1614,7 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
       });
     });
 
-    // Helper to keep split summary label and count badge in sync
+    // Helper to keep split summary label, count badge, and treat notes in sync
     function updateSplitSummary(prefix) {
       const checkboxes = document.querySelectorAll(prefix === 'add' ? '#add-split-checkboxes input[type="checkbox"]' : '.edit-split-box');
       if (!checkboxes || checkboxes.length === 0) return;
@@ -1559,48 +1622,62 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
       const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
       
       const summaryLabel = document.getElementById(`${prefix}-split-summary-label`);
+      const summaryIcon = document.getElementById(`${prefix}-split-summary-icon`);
       const countBadge = document.getElementById(`${prefix}-split-count-badge`);
-      const toggleBtn = document.getElementById(`toggle-all-${prefix}-split`);
+      const treatNotes = document.querySelectorAll(`#${prefix}-split-treat-note, #${prefix}-split-treat-note-dropdown`);
 
       if (summaryLabel) {
         if (checkedCount === total) {
           summaryLabel.textContent = `All (${total}) members`;
+          if (summaryIcon) summaryIcon.textContent = '👥';
         } else if (checkedCount === 0) {
-          summaryLabel.textContent = 'None selected';
+          summaryLabel.textContent = 'No one (Paid for team / Treat)';
+          if (summaryIcon) summaryIcon.textContent = '🎁';
         } else {
           summaryLabel.textContent = `${checkedCount} of ${total} members`;
+          if (summaryIcon) summaryIcon.textContent = '👥';
         }
       }
 
       if (countBadge) {
-        countBadge.textContent = `${checkedCount} of ${total} selected`;
+        if (checkedCount === 0) {
+          countBadge.textContent = '0 selected (Payer covers 100%)';
+        } else {
+          countBadge.textContent = `${checkedCount} of ${total} selected`;
+        }
       }
 
-      if (toggleBtn) {
-        toggleBtn.textContent = checkedCount > 0 ? 'Deselect All' : 'Select All';
-      }
-    }
-
-    // Toggle split helpers
-    const toggleAddSplitBtn = document.getElementById('toggle-all-add-split');
-    if (toggleAddSplitBtn) {
-      toggleAddSplitBtn.addEventListener('click', () => {
-        const checkboxes = document.querySelectorAll('#add-split-checkboxes input[type="checkbox"]');
-        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-        checkboxes.forEach(cb => { cb.checked = !anyChecked; });
-        updateSplitSummary('add');
+      treatNotes.forEach(el => {
+        if (checkedCount === 0) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
       });
     }
 
-    const toggleEditSplitBtn = document.getElementById('toggle-all-edit-split');
-    if (toggleEditSplitBtn) {
-      toggleEditSplitBtn.addEventListener('click', () => {
-        const checkboxes = document.querySelectorAll('.edit-split-box');
-        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-        checkboxes.forEach(cb => { cb.checked = !anyChecked; });
-        updateSplitSummary('edit');
+    function setupSplitButtons(prefix) {
+      const getCheckboxes = () => document.querySelectorAll(prefix === 'add' ? '#add-split-checkboxes input[type="checkbox"]' : '.edit-split-box');
+
+      const allBtns = document.querySelectorAll(`#btn-${prefix}-split-all, #btn-${prefix}-split-all-dropdown`);
+      allBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          getCheckboxes().forEach(cb => { cb.checked = true; });
+          updateSplitSummary(prefix);
+        });
+      });
+
+      const noneBtns = document.querySelectorAll(`#btn-${prefix}-split-none, #btn-${prefix}-split-none-dropdown`);
+      noneBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          getCheckboxes().forEach(cb => { cb.checked = false; });
+          updateSplitSummary(prefix);
+        });
       });
     }
+
+    setupSplitButtons('add');
+    setupSplitButtons('edit');
 
     // Attach real-time change listeners to split checkboxes
     document.querySelectorAll('#add-split-checkboxes input[type="checkbox"]').forEach(cb => {

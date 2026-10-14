@@ -117,8 +117,12 @@ export const GET: APIRoute = async ({ request, url }) => {
       if (exp.split_among) {
         try {
           const parsed = JSON.parse(exp.split_among);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            splitDesc = parsed.join('; ');
+          if (Array.isArray(parsed)) {
+            if (parsed.length === 0) {
+              splitDesc = 'No one (Paid for team / Not split)';
+            } else {
+              splitDesc = parsed.join('; ');
+            }
           }
         } catch (e) {}
       }

@@ -28,8 +28,8 @@ Always inspect open issues and update GitHub Projects when implementing features
 
 ## Bill Splitting & Multi-Currency Settlement Patterns
 
-- **Participant Attribution**: Stored in `trip_members` (per-trip roster) and `expenses.paid_by` (payer name) / `expenses.split_among` (JSON array of member names).
-- **Settlement Logic**: `src/utils/settlement.ts` normalizes all expenses to `base_currency` using stored `base_amount`, computes individual net balances, and runs a greedy minimum-transfers debt settlement algorithm.
+- **Participant Attribution**: Stored in `trip_members` (per-trip roster) and `expenses.paid_by` (payer name) / `expenses.split_among` (JSON array of member names). When an expense is paid by someone for the team as a treat (not split with anyone), `split_among` is explicitly stored as `'[]'`.
+- **Settlement Logic**: `src/utils/settlement.ts` normalizes all expenses to `base_currency` using stored `base_amount`, computes individual net balances, and runs a greedy minimum-transfers debt settlement algorithm. Expenses with `split_among = '[]'` (no one selected) are absorbed 100% by the payer with zero debt generated for other members. Legacy records (`split_among IS NULL`) default to splitting equally among all members.
 - **CSV Export**: `src/pages/api/export.ts` outputs trip data, participant rosters, itemized expense splits, and settlement transfer instructions with UTF-8 BOM.
 
 ## Cloudflare R2 & Image Upload Patterns

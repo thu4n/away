@@ -30,13 +30,19 @@ export const POST: APIRoute = async ({ request }) => {
   let image_key = data.get('image_key') as string | null;
 
   const paid_by = (data.get('paid_by') as string)?.trim() || null;
+  const splitSelectorActive = data.get('split_selector_active') === '1';
   const splitAmongAll = data.getAll('split_among').map((s) => String(s).trim()).filter(Boolean);
   let split_among: string | null = null;
   if (splitAmongAll.length > 0) {
     split_among = JSON.stringify(splitAmongAll);
+  } else if (splitSelectorActive) {
+    // Explicitly selected no one / paid for team
+    split_among = '[]';
   } else {
     const rawSplit = (data.get('split_among') as string)?.trim();
-    if (rawSplit) split_among = rawSplit;
+    if (rawSplit) {
+      split_among = (rawSplit === 'none' || rawSplit === '[]') ? '[]' : rawSplit;
+    }
   }
 
   // Fetch trip's base currency to automatically convert if different

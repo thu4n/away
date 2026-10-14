@@ -57,28 +57,41 @@ export function calculateSettlement(
 
     // Parse split_among
     let beneficiaries: string[] = [];
-    if (exp.split_among) {
+    let isSplitConfigured = false;
+    if (exp.split_among !== null && exp.split_among !== undefined && exp.split_among !== '') {
+      isSplitConfigured = true;
       try {
         const parsed = JSON.parse(exp.split_among);
         if (Array.isArray(parsed)) {
-          beneficiaries = parsed.map((s: any) => String(s).trim()).filter((m) => m in balancesMap);
+          beneficiaries = parsed.map((s: any) => String(s).trim()).filter((m: string) => m in balancesMap);
         }
       } catch {
-        beneficiaries = String(exp.split_among)
+        const parts = String(exp.split_among)
           .split(',')
           .map((s) => s.trim())
-          .filter((m) => m in balancesMap);
+          .filter(Boolean);
+        if (parts.length === 1 && (parts[0] === 'none' || parts[0] === '[]')) {
+          beneficiaries = [];
+        } else {
+          beneficiaries = parts.filter((m) => m in balancesMap);
+        }
       }
     }
 
-    // Default: split equally among all trip members if none selected
-    if (beneficiaries.length === 0) {
+    // Default: split equally among all trip members if none was configured (legacy data)
+    if (!isSplitConfigured) {
       beneficiaries = [...memberNames];
     }
 
-    const perPersonShare = cost / beneficiaries.length;
-    for (const b of beneficiaries) {
-      balancesMap[b].share += perPersonShare;
+    if (beneficiaries.length === 0) {
+      // Expense is not split with anyone (e.g. payer treated the team / paid for team).
+      // Payer absorbs 100% of their own expense, so net debt impact across members is 0.
+      balancesMap[payer].share += cost;
+    } else {
+      const perPersonShare = cost / beneficiaries.length;
+      for (const b of beneficiaries) {
+        balancesMap[b].share += perPersonShare;
+      }
     }
   }
 
