@@ -1121,19 +1121,52 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
             </div>
           )}
 
+          <!-- Member Settlement Filter -->
+          <div class="p-3.5 rounded-2xl bg-gray-50 dark:bg-slate-700/40 border border-gray-100 dark:border-slate-700">
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="settlement-member-filter" class="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <span>👤</span> Filter by Member
+              </label>
+              <button
+                type="button"
+                id="reset-settlement-filter"
+                class="text-[11px] text-sapphire dark:text-sky-mist font-semibold hover:underline hidden"
+              >
+                Clear filter
+              </button>
+            </div>
+            <select
+              id="settlement-member-filter"
+              class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-sapphire transition-all"
+            >
+              <option value="">All Members (Show All Transfers)</option>
+              {members.map((m: any) => (
+                <option value={m.name}>{m.name}</option>
+              ))}
+            </select>
+          </div>
+
           <!-- Settlement Transfers Plan -->
           <div>
-            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-400 mb-2.5">
-              🤝 Settlement Plan (Who Pays Whom)
-            </h4>
+            <div class="flex items-center justify-between mb-2.5">
+              <h4 id="settlement-transfers-heading" class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-400">
+                🤝 Settlement Plan (Who Pays Whom)
+              </h4>
+              <span id="settlement-filter-subheading" class="text-[11px] font-semibold text-sapphire dark:text-sky-mist hidden"></span>
+            </div>
             {settlementSummary.transfers.length === 0 ? (
               <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-center text-xs font-semibold">
                 🎉 All balances are settled up! No payments needed.
               </div>
             ) : (
-              <div class="space-y-2">
+              <div class="space-y-2" id="settlement-transfers-container">
                 {settlementSummary.transfers.map((t) => (
-                  <div class="flex items-center justify-between p-3 rounded-2xl bg-pale-sapphire dark:bg-nightfall/60 border border-sky-mist/30 dark:border-sapphire/30">
+                  <div
+                    class="settlement-transfer-card flex items-center justify-between p-3 rounded-2xl bg-pale-sapphire dark:bg-nightfall/60 border border-sky-mist/30 dark:border-sapphire/30 transition-all"
+                    data-from={t.from}
+                    data-to={t.to}
+                    data-amount-formatted={formatCurrency(t.amount, baseCurrency)}
+                  >
                     <div class="flex items-center gap-2">
                       <span class="font-bold text-sm text-gray-900 dark:text-white">{t.from}</span>
                       <span class="text-xs text-gray-400 font-bold">➔</span>
@@ -1144,6 +1177,10 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
                     </div>
                   </div>
                 ))}
+                <!-- Empty state when filtered member owes nothing -->
+                <div id="settlement-empty-filter-state" class="hidden p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-center text-xs font-semibold">
+                  <p id="settlement-empty-filter-msg">🎉 No payments needed!</p>
+                </div>
               </div>
             )}
           </div>
@@ -1153,9 +1190,15 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
             <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 dark:text-gray-400 mb-2.5">
               📊 Balances Breakdown
             </h4>
-            <div class="space-y-2">
+            <div class="space-y-2" id="settlement-balances-container">
               {settlementSummary.balances.map((b) => (
-                <div class="p-3 rounded-2xl bg-gray-50 dark:bg-slate-700/50 border border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                <div
+                  class="settlement-balance-card p-3 rounded-2xl bg-gray-50 dark:bg-slate-700/50 border border-gray-100 dark:border-slate-700 flex items-center justify-between transition-all"
+                  data-name={b.name}
+                  data-paid-formatted={formatCurrency(b.paid, baseCurrency)}
+                  data-share-formatted={formatCurrency(b.share, baseCurrency)}
+                  data-net-formatted={b.net > 0 ? `+${formatCurrency(b.net, baseCurrency)}` : b.net < 0 ? `-${formatCurrency(-b.net, baseCurrency)}` : 'Settled'}
+                >
                   <div>
                     <div class="font-bold text-sm text-gray-900 dark:text-white">{b.name}</div>
                     <div class="text-[11px] text-gray-500 mt-0.5">
@@ -1494,9 +1537,124 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
     });
     updateSplitSummary('add');
 
-    // Copy settlement breakdown
+    // Settlement Member Filter wiring
+    const memberFilterSelect = document.getElementById('settlement-member-filter');
+    const resetMemberFilterBtn = document.getElementById('reset-settlement-filter');
+    const filterSubheading = document.getElementById('settlement-filter-subheading');
+    const emptyFilterState = document.getElementById('settlement-empty-filter-state');
+    const emptyFilterMsg = document.getElementById('settlement-empty-filter-msg');
     const copySettlementBtn = document.getElementById('copy-settlement-btn');
     const copySettlementLabel = document.getElementById('copy-settlement-label');
+    const originalSettlementShareText = copySettlementBtn ? (copySettlementBtn.dataset.text || '') : '';
+
+    function applySettlementFilter() {
+      const selectedMember = memberFilterSelect ? memberFilterSelect.value.trim() : '';
+      const transferCards = document.querySelectorAll('.settlement-transfer-card');
+      const balanceCards = document.querySelectorAll('.settlement-balance-card');
+
+      if (!selectedMember) {
+        // Show all
+        if (resetMemberFilterBtn) resetMemberFilterBtn.classList.add('hidden');
+        if (filterSubheading) {
+          filterSubheading.classList.add('hidden');
+          filterSubheading.textContent = '';
+        }
+        if (emptyFilterState) emptyFilterState.classList.add('hidden');
+
+        transferCards.forEach(card => card.classList.remove('hidden'));
+        balanceCards.forEach(card => card.classList.remove('hidden'));
+
+        if (copySettlementBtn) {
+          copySettlementBtn.dataset.text = originalSettlementShareText;
+        }
+        if (copySettlementLabel) {
+          copySettlementLabel.textContent = 'Copy Settlement Breakdown to Share';
+        }
+        return;
+      }
+
+      // Filter active
+      if (resetMemberFilterBtn) resetMemberFilterBtn.classList.remove('hidden');
+
+      // Filter transfers where selectedMember has to pay
+      let matchCount = 0;
+      const matchedTransfersText = [];
+
+      transferCards.forEach(card => {
+        const from = card.dataset.from;
+        const to = card.dataset.to;
+        const amountFormatted = card.dataset.amountFormatted;
+
+        if (from === selectedMember) {
+          card.classList.remove('hidden');
+          matchCount++;
+          matchedTransfersText.push(`• ${from} ➔ ${to}: ${amountFormatted}`);
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      // Filter balances breakdown to focus on selected member
+      let memberBalanceInfo = null;
+      balanceCards.forEach(card => {
+        if (card.dataset.name === selectedMember) {
+          card.classList.remove('hidden');
+          memberBalanceInfo = {
+            paid: card.dataset.paidFormatted,
+            share: card.dataset.shareFormatted,
+            net: card.dataset.netFormatted,
+          };
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      // Update transfer heading or empty message
+      if (filterSubheading) {
+        filterSubheading.classList.remove('hidden');
+        filterSubheading.textContent = `${selectedMember} pays (${matchCount})`;
+      }
+
+      if (matchCount === 0) {
+        if (emptyFilterState) {
+          emptyFilterState.classList.remove('hidden');
+          if (emptyFilterMsg) {
+            emptyFilterMsg.textContent = `🎉 ${selectedMember} has no payments to make!`;
+          }
+        }
+      } else {
+        if (emptyFilterState) emptyFilterState.classList.add('hidden');
+      }
+
+      // Update copy button to copy personalized settlement for this person
+      if (copySettlementBtn) {
+        let personalText = `💰 Settlement info for ${selectedMember}:\n`;
+        if (memberBalanceInfo) {
+          personalText += `Paid: ${memberBalanceInfo.paid} · Share: ${memberBalanceInfo.share} · Net: ${memberBalanceInfo.net}\n\n`;
+        }
+        if (matchCount > 0) {
+          personalText += `Payments to make:\n` + matchedTransfersText.join('\n');
+        } else {
+          personalText += `🎉 All settled up! No payments to make.`;
+        }
+        copySettlementBtn.dataset.text = personalText;
+      }
+      if (copySettlementLabel) {
+        copySettlementLabel.textContent = `Copy ${selectedMember}'s Breakdown`;
+      }
+    }
+
+    if (memberFilterSelect) {
+      memberFilterSelect.addEventListener('change', applySettlementFilter);
+    }
+    if (resetMemberFilterBtn) {
+      resetMemberFilterBtn.addEventListener('click', () => {
+        if (memberFilterSelect) memberFilterSelect.value = '';
+        applySettlementFilter();
+      });
+    }
+
+    // Copy settlement breakdown
     if (copySettlementBtn && copySettlementLabel) {
       copySettlementBtn.addEventListener('click', async () => {
         const textToCopy = copySettlementBtn.dataset.text || '';
