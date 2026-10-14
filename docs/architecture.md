@@ -32,12 +32,12 @@ away/
 │   │   ├── trip/
 │   │   │   └── [id].astro    # Trip detail — timeline, expenses, and resources tabs
 │   │   └── api/
-│   │       ├── trips.ts      # CRUD API for trips
-│   │       ├── timeline.ts   # CRUD API for timeline items
-│   │       ├── expenses.ts   # CRUD API for expenses (handles R2 image upload)
+│   │       ├── trips.ts      # CRUD API for trips (handles R2 banner image upload)
+│   │       ├── timeline.ts   # CRUD API for timeline items (handles R2 event photo upload)
+│   │       ├── expenses.ts   # CRUD API for expenses (handles R2 proof image upload)
 │   │       ├── resources.ts  # CRUD API for trip resources
 │   │       └── images/
-│   │           └── [...key].ts # Proxy to serve proof images securely from R2
+│   │           └── [...key].ts # Proxy to serve trip, event, and expense images securely from R2
 │   └── styles/
 │       └── global.css        # CSS custom properties, Tailwind v4 import, custom components
 ├── schema.sql                # D1 database schema (DDL)
@@ -107,7 +107,9 @@ See [`schema.sql`](../schema.sql) for the full DDL. Key constraints:
 - `expenses.trip_id` — `ON DELETE CASCADE` (deleting a trip removes its expenses)
 - `trip_resources.trip_id` — `ON DELETE CASCADE` (deleting a trip removes resources)
 - `expenses.timeline_item_id` — `ON DELETE SET NULL` (deleting an event unlinks, but keeps, the expense)
-- `expenses.image_key` — Stores the path in R2 (e.g., `expenses/1-12345678-receipt.jpg`)
+- `trips.cover_image_key` — Stores trip customization banner in R2 (e.g., `trips/1-12345678-banner.jpg`)
+- `timeline_items.image_key` — Stores event photo in R2 (e.g., `timeline/1-12345678-hotel.jpg`)
+- `expenses.image_key` — Stores proof receipt in R2 (e.g., `expenses/1-12345678-receipt.jpg`)
 
 ---
 

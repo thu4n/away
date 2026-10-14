@@ -35,61 +35,110 @@ const formatDate = (date: string | Date) => {
         trips.map((trip: any) => (
           <a
             href={`/trip/${trip.id}`}
-            class="group block relative p-5 bg-pale-sapphire dark:bg-nightfall/60 rounded-2xl shadow-sm hover:shadow-md border border-sky-mist/30 dark:border-sapphire/30 transition-all focus:outline-none focus:ring-2 focus:ring-sapphire focus:ring-offset-2 dark:focus:ring-offset-nightfall"
+            class="group block relative bg-pale-sapphire dark:bg-nightfall/60 rounded-2xl shadow-sm hover:shadow-md border border-sky-mist/30 dark:border-sapphire/30 transition-all focus:outline-none focus:ring-2 focus:ring-sapphire focus:ring-offset-2 dark:focus:ring-offset-nightfall overflow-hidden"
           >
-            <h2 class="text-xl font-bold text-nightfall dark:text-whisper group-hover:text-sapphire dark:group-hover:text-sky-mist transition-colors">
-              {trip.name}
-            </h2>
-            <div class="flex items-center justify-between mt-2">
-              <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+            {trip.cover_image_key ? (
+              <div class="relative h-44 sm:h-52 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                <img
+                  src={`/api/images/${trip.cover_image_key}`}
+                  alt={trip.name}
+                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
+                <button
+                  class="edit-trip-btn absolute top-3 right-3 z-10 p-2 text-white bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full shadow transition-all hover:scale-105"
+                  aria-label="Edit Trip"
+                  onclick="event.preventDefault();"
+                  data-id={trip.id}
+                  data-name={trip.name}
+                  data-start={trip.start_date}
+                  data-end={trip.end_date}
+                  data-currency={trip.base_currency || 'VND'}
+                  data-image={trip.cover_image_key || ''}
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <span>
-                  {formatDate(trip.start_date)} - {formatDate(trip.end_date)}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                    />
+                  </svg>
+                </button>
+                <div class="absolute bottom-3 left-4 right-4">
+                  <h2 class="text-xl font-bold text-white drop-shadow-sm truncate">
+                    {trip.name}
+                  </h2>
+                </div>
+              </div>
+            ) : null}
+
+            <div class={`p-5 ${trip.cover_image_key ? 'pt-3' : ''}`}>
+              {!trip.cover_image_key && (
+                <div class="flex justify-between items-start mb-2 pr-8">
+                  <h2 class="text-xl font-bold text-nightfall dark:text-whisper group-hover:text-sapphire dark:group-hover:text-sky-mist transition-colors truncate">
+                    {trip.name}
+                  </h2>
+                  <button
+                    class="edit-trip-btn absolute top-4 right-4 z-10 p-2 text-sapphire/50 hover:text-sapphire rounded-full hover:bg-sky-mist/20 transition-colors"
+                    aria-label="Edit Trip"
+                    onclick="event.preventDefault();"
+                    data-id={trip.id}
+                    data-name={trip.name}
+                    data-start={trip.start_date}
+                    data-end={trip.end_date}
+                    data-currency={trip.base_currency || 'VND'}
+                    data-image={trip.cover_image_key || ''}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              <div class="flex items-center justify-between">
+                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span>
+                    {formatDate(trip.start_date)} - {formatDate(trip.end_date)}
+                  </span>
+                </div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-sapphire/10 text-sapphire dark:bg-sky-mist/20 dark:text-sky-mist border border-sapphire/20">
+                  {trip.base_currency || 'VND'}
                 </span>
               </div>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-sapphire/10 text-sapphire dark:bg-sky-mist/20 dark:text-sky-mist border border-sapphire/20">
-                {trip.base_currency || 'VND'}
-              </span>
             </div>
-
-            <button
-              class="edit-trip-btn absolute top-4 right-4 z-10 p-2 text-sapphire/50 hover:text-sapphire rounded-full hover:bg-sky-mist/20 transition-colors"
-              aria-label="Edit Trip"
-              onclick="event.preventDefault();"
-              data-id={trip.id}
-              data-name={trip.name}
-              data-start={trip.start_date}
-              data-end={trip.end_date}
-              data-currency={trip.base_currency || 'VND'}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                />
-              </svg>
-            </button>
           </a>
         ))
       }
@@ -102,7 +151,7 @@ const formatDate = (date: string | Date) => {
       <h2 class="text-xl font-bold text-nightfall dark:text-whisper mb-4">
         Add New Trip
       </h2>
-      <form method="POST" action="/api/trips" class="space-y-4">
+      <form method="POST" action="/api/trips" enctype="multipart/form-data" class="space-y-4">
         <div>
           <label
             for="name"
@@ -164,6 +213,20 @@ const formatDate = (date: string | Date) => {
             ))}
           </select>
         </div>
+        <div>
+          <label
+            for="cover_image"
+            class="block text-sm font-medium text-nightfall/60 dark:text-whisper/60"
+            >Banner Image <span class="text-xs text-gray-400">(optional)</span></label
+          >
+          <input
+            type="file"
+            name="cover_image"
+            id="cover_image"
+            accept="image/*"
+            class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-sapphire/10 file:text-sapphire hover:file:bg-sapphire/20 dark:file:bg-sky-mist/20 dark:file:text-sky-mist transition-all cursor-pointer border border-sky-mist/30 dark:border-sapphire/30 rounded-xl bg-white dark:bg-nightfall/60"
+          />
+        </div>
         <button
           type="submit"
           class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-base font-bold text-white bg-sapphire hover:bg-ocean focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sapphire dark:focus:ring-offset-nightfall transition-all active:scale-[0.98]"
@@ -201,9 +264,10 @@ const formatDate = (date: string | Date) => {
           </svg>
         </button>
       </div>
-      <form method="POST" action="/api/trips" class="space-y-4">
+      <form method="POST" action="/api/trips" enctype="multipart/form-data" class="space-y-4">
         <input type="hidden" name="action" id="edit-trip-action" value="edit" />
         <input type="hidden" name="id" id="edit-trip-id" />
+        <input type="hidden" name="cover_image_key" id="edit-trip-image-key" />
         <div>
           <label
             for="edit_name"
@@ -264,6 +328,30 @@ const formatDate = (date: string | Date) => {
             ))}
           </select>
         </div>
+        <div id="edit-trip-image-preview" class="hidden space-y-2">
+          <label class="block text-sm font-medium text-nightfall/60 dark:text-whisper/60">Current Banner Image</label>
+          <div class="relative w-full h-32 rounded-xl overflow-hidden border border-sky-mist/30 dark:border-sapphire/30 bg-slate-100 dark:bg-slate-800">
+            <img id="edit-trip-preview-img" src="" alt="Cover preview" class="w-full h-full object-cover" />
+          </div>
+          <label class="flex items-center text-xs text-red-500 hover:text-red-600 cursor-pointer gap-2 pt-1">
+            <input type="checkbox" name="remove_cover_image" value="true" id="edit-trip-remove-image" class="rounded border-gray-300 text-red-600 focus:ring-red-500" />
+            <span>Remove current banner</span>
+          </label>
+        </div>
+        <div>
+          <label
+            for="edit_cover_image"
+            class="block text-sm font-medium text-nightfall/60 dark:text-whisper/60"
+            >Change Banner Image <span class="text-xs text-gray-400">(optional)</span></label
+          >
+          <input
+            type="file"
+            name="cover_image"
+            id="edit_cover_image"
+            accept="image/*"
+            class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-sapphire/10 file:text-sapphire hover:file:bg-sapphire/20 dark:file:bg-sky-mist/20 dark:file:text-sky-mist transition-all cursor-pointer border border-sky-mist/30 dark:border-sapphire/30 rounded-xl bg-white dark:bg-nightfall/60"
+          />
+        </div>
         <div class="pt-4 flex flex-col gap-2">
           <button
             type="submit"
@@ -294,6 +382,7 @@ const formatDate = (date: string | Date) => {
         const start = target.getAttribute("data-start");
         const end = target.getAttribute("data-end");
         const currency = target.getAttribute("data-currency") || "VND";
+        const image = target.getAttribute("data-image") || "";
 
         (document.getElementById("edit-trip-id") as HTMLInputElement).value =
           id || "";
@@ -305,6 +394,23 @@ const formatDate = (date: string | Date) => {
           end || "";
         (document.getElementById("edit_base_currency") as HTMLSelectElement).value =
           currency;
+        (document.getElementById("edit-trip-image-key") as HTMLInputElement).value =
+          image;
+
+        const previewDiv = document.getElementById("edit-trip-image-preview");
+        const previewImg = document.getElementById("edit-trip-preview-img") as HTMLImageElement;
+        const removeCheckbox = document.getElementById("edit-trip-remove-image") as HTMLInputElement;
+        const fileInput = document.getElementById("edit_cover_image") as HTMLInputElement;
+
+        if (fileInput) fileInput.value = "";
+        if (removeCheckbox) removeCheckbox.checked = false;
+
+        if (image && previewDiv && previewImg) {
+          previewImg.src = "/api/images/" + image;
+          previewDiv.classList.remove("hidden");
+        } else if (previewDiv) {
+          previewDiv.classList.add("hidden");
+        }
 
         dialog.showModal();
       });

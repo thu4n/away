@@ -79,9 +79,10 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     // SECTION 2: TIMELINE ITEMS
     lines.push('# ITINERARY & TIMELINE');
-    lines.push(['No.', 'Day Number', 'Date', 'Time Mark', 'Event Title', 'Google Maps URL', 'Description'].map(escapeCSV).join(','));
+    lines.push(['No.', 'Day Number', 'Date', 'Time Mark', 'Event Title', 'Google Maps URL', 'Description', 'Photo URL'].map(escapeCSV).join(','));
     let eventIdx = 1;
     for (const item of (timelineItems || [])) {
+      const photoUrl = item.image_key ? `${origin}/api/images/${item.image_key}` : '';
       lines.push([
         eventIdx++,
         item.day_number,
@@ -89,7 +90,8 @@ export const GET: APIRoute = async ({ request, url }) => {
         item.time_mark || '',
         item.title || '',
         item.maps_url || '',
-        item.description || ''
+        item.description || '',
+        photoUrl
       ].map(escapeCSV).join(','));
     }
     lines.push('');

@@ -7,7 +7,8 @@ CREATE TABLE trips (
     name TEXT NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    base_currency TEXT NOT NULL DEFAULT 'VND'
+    base_currency TEXT NOT NULL DEFAULT 'VND',
+    cover_image_key TEXT
 );
 
 CREATE TABLE timeline_items (
@@ -17,7 +18,8 @@ CREATE TABLE timeline_items (
     time_mark TEXT NOT NULL,
     title TEXT NOT NULL,
     maps_url TEXT,
-    description TEXT
+    description TEXT,
+    image_key TEXT
 );
 
 CREATE TABLE expenses (

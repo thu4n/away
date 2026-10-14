@@ -173,6 +173,30 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
       </div>
     )}
   </div>
+
+  <!-- TRIP BANNER HERO (if cover_image_key exists) -->
+  {tripResult.cover_image_key && (
+    <div class="relative w-full h-44 sm:h-64 rounded-3xl overflow-hidden mb-6 shadow-sm border border-sky-mist/30 dark:border-sapphire/20 group">
+      <img
+        src={`/api/images/${tripResult.cover_image_key}`}
+        alt={tripResult.name}
+        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+      <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent"></div>
+      <div class="absolute bottom-4 left-5 right-5 text-white flex justify-between items-end">
+        <div>
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-md text-white mb-1.5 border border-white/20">
+            {formatDate(tripResult.start_date)} – {formatDate(tripResult.end_date)}
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-sm">{tripResult.name}</h2>
+        </div>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-sapphire/80 text-white backdrop-blur-md border border-white/20">
+          {baseCurrency}
+        </span>
+      </div>
+    </div>
+  )}
+
   <!-- TIMELINE TAB -->
   {currentTab === 'timeline' && (
     <div class="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -200,6 +224,7 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
                       data-title={item.title}
                       data-url={item.maps_url || ''}
                       data-desc={item.description || ''}
+                      data-image={item.image_key || ''}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -210,6 +235,32 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
                 <h3 class="font-bold text-nightfall dark:text-whisper text-lg">{item.title}</h3>
                 {item.description && <p class="text-sm text-nightfall/60 dark:text-whisper/60 mt-1">{item.description}</p>}
                 
+                {item.image_key && (
+                  <div class="mt-3 overflow-hidden rounded-xl border border-sky-mist/30 dark:border-sapphire/30 shadow-xs">
+                    <a
+                      href={`/api/images/${item.image_key}`}
+                      target="_blank"
+                      class="block group/img relative overflow-hidden bg-slate-100 dark:bg-slate-800"
+                    >
+                      <img
+                        src={`/api/images/${item.image_key}`}
+                        alt={item.title}
+                        class="w-full h-44 sm:h-52 object-cover transition-transform duration-300 group-hover/img:scale-105"
+                        loading="lazy"
+                      />
+                      <div class="absolute inset-0 bg-black/0 group-hover/img:bg-black/20 transition-colors flex items-end justify-end p-2.5">
+                        <span class="opacity-0 group-hover/img:opacity-100 transition-opacity text-[11px] font-semibold bg-black/60 text-white px-2.5 py-1 rounded-lg backdrop-blur-sm flex items-center gap-1.5 shadow">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          View photo
+                        </span>
+                      </div>
+                    </a>
+                  </div>
+                )}
+
                 <div class="mt-4 pt-3 border-t border-gray-100 dark:border-slate-700 flex gap-2">
                   {item.maps_url && (
                     <a href={item.maps_url} target="_blank" class="inline-flex items-center px-3 py-1.5 text-xs font-bold text-white bg-sapphire rounded-lg hover:bg-ocean transition-colors">
@@ -240,7 +291,7 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
           </svg>
         </button>
       </div>
-      <form method="POST" action="/api/timeline" class="space-y-4">
+      <form method="POST" action="/api/timeline" enctype="multipart/form-data" class="space-y-4">
         <input type="hidden" name="trip_id" value={id} />
         
         <div class="grid grid-cols-2 gap-3">
@@ -273,6 +324,11 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
           <textarea name="description" rows="2" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm resize-none"></textarea>
         </div>
         
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Event Photo <span class="text-gray-400">(optional)</span></label>
+          <input type="file" name="event_image" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-400 dark:hover:file:bg-blue-900/50 transition-all cursor-pointer border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700/50" />
+        </div>
+
         <button type="submit" class="w-full py-3 bg-sapphire text-whisper font-semibold rounded-xl hover:bg-ocean active:scale-[0.98] transition-all">Add to Timeline</button>
       </form>
     </dialog>
@@ -289,10 +345,11 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
           </svg>
         </button>
       </div>
-      <form method="POST" action="/api/timeline" class="space-y-4">
+      <form method="POST" action="/api/timeline" enctype="multipart/form-data" class="space-y-4">
         <input type="hidden" name="action" id="edit-event-action" value="edit" />
         <input type="hidden" name="trip_id" value={id} />
         <input type="hidden" name="id" id="edit-event-id" />
+        <input type="hidden" name="image_key" id="edit-event-image" />
         
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -322,6 +379,29 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">Notes <span class="text-gray-400">(optional)</span></label>
           <textarea name="description" id="edit-event-desc" rows="2" class="block w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700/50 px-3 py-2.5 text-gray-900 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-blue-500 transition-all text-sm resize-none"></textarea>
+        </div>
+
+        <div id="edit-event-image-preview" class="hidden mb-2">
+          <label class="block text-xs font-medium text-gray-500 mb-1">Current Event Photo</label>
+          <div class="relative w-full h-32 rounded-xl overflow-hidden border border-gray-200 dark:border-slate-600 mb-2 bg-gray-50 dark:bg-slate-700">
+            <img id="edit-event-preview-img" src="" alt="Event photo preview" class="w-full h-full object-cover" />
+          </div>
+          <label class="flex items-center text-xs text-red-500 hover:text-red-600 cursor-pointer gap-1.5">
+            <input type="checkbox" name="remove_image" value="true" id="edit-event-remove-image" class="rounded border-gray-300 text-red-600 focus:ring-red-500" />
+            <span>Remove event photo</span>
+          </label>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Event Photo <span class="text-gray-400">(optional)</span></label>
+          <input
+            type="file"
+            name="event_image"
+            id="edit-event-file"
+            accept="image/*"
+            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-400 dark:hover:file:bg-blue-900/50 transition-all cursor-pointer border border-gray-200 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-slate-700/50"
+          />
+          <p class="text-[10px] text-gray-400 mt-1 pl-1">Uploading a new image will replace the current one.</p>
         </div>
         
         <div class="pt-4 flex flex-col gap-2">
@@ -363,6 +443,26 @@ const displayTotalVnd = displayExpenses.reduce((acc: number, e: any) => {
         (document.getElementById('edit-event-title') as HTMLInputElement).value = target.dataset.title || '';
         (document.getElementById('edit-event-url') as HTMLInputElement).value = target.dataset.url || '';
         (document.getElementById('edit-event-desc') as HTMLTextAreaElement).value = target.dataset.desc || '';
+        
+        const imageKey = target.dataset.image || '';
+        (document.getElementById('edit-event-image') as HTMLInputElement).value = imageKey;
+        const previewDiv = document.getElementById('edit-event-image-preview');
+        const previewImg = document.getElementById('edit-event-preview-img') as HTMLImageElement;
+        const removeCheckbox = document.getElementById('edit-event-remove-image') as HTMLInputElement;
+        const fileInput = document.getElementById('edit-event-file') as HTMLInputElement;
+
+        if (fileInput) fileInput.value = '';
+        if (removeCheckbox) removeCheckbox.checked = false;
+
+        if (previewDiv && previewImg) {
+          if (imageKey) {
+            previewImg.src = '/api/images/' + imageKey;
+            previewDiv.classList.remove('hidden');
+          } else {
+            previewDiv.classList.add('hidden');
+          }
+        }
+
         (editEventDialog as any)?.showModal();
       });
     });
