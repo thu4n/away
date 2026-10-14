@@ -26,6 +26,12 @@ Always inspect open issues and update GitHub Projects when implementing features
   ```
 - **Base DDL sync**: Whenever creating a migration, always update `schema.sql` so that fresh databases initialized from `schema.sql` include all new columns and constraints.
 
+## Bill Splitting & Multi-Currency Settlement Patterns
+
+- **Participant Attribution**: Stored in `trip_members` (per-trip roster) and `expenses.paid_by` (payer name) / `expenses.split_among` (JSON array of member names).
+- **Settlement Logic**: `src/utils/settlement.ts` normalizes all expenses to `base_currency` using stored `base_amount`, computes individual net balances, and runs a greedy minimum-transfers debt settlement algorithm.
+- **CSV Export**: `src/pages/api/export.ts` outputs trip data, participant rosters, itemized expense splits, and settlement transfer instructions with UTF-8 BOM.
+
 ## Cloudflare R2 & Image Upload Patterns
 
 - **Bucket Binding**: Access via `(env as any).BUCKET` in Astro API routes.

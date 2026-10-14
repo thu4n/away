@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 import { formatCurrency } from '../../utils/currency';
+import { calculateSettlement } from '../../utils/settlement';
 
 function escapeCSV(val: any): string {
   if (val === null || val === undefined) return '""';
@@ -27,6 +28,11 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     const baseCurrency = trip.base_currency || 'VND';
 
+    const { results: members } = await db.prepare(
+      'SELECT * FROM trip_members WHERE trip_id = ? ORDER BY created_at ASC, id ASC'
+    ).bind(id).all();
+    const memberNames = (members || []).map((m: any) => m.name);
+
     const { results: timelineItems } = await db.prepare(
       'SELECT * FROM timeline_items WHERE trip_id = ? ORDER BY day_number ASC, time_mark ASC'
     ).bind(id).all();
@@ -42,6 +48,8 @@ export const GET: APIRoute = async ({ request, url }) => {
     const { results: resources } = await db.prepare(
       'SELECT * FROM trip_resources WHERE trip_id = ? ORDER BY created_at ASC, id ASC'
     ).bind(id).all();
+
+    const settlementSummary = calculateSettlement(expenses || [], memberNames, baseCurrency);
 
     const requestUrl = new URL(request.url);
     const origin = requestUrl.origin;
@@ -64,13 +72,14 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     // SECTION 1: TRIP OVERVIEW
     lines.push('# TRIP OVERVIEW');
-    lines.push(['Trip Name', 'Base Currency', 'Start Date', 'End Date', 'Total Events', `Total Expenses (${baseCurrency})`, 'Total Resources'].map(escapeCSV).join(','));
+    lines.push(['Trip Name', 'Base Currency', 'Start Date', 'End Date', 'Participants', 'Total Events', `Total Expenses (${baseCurrency})`, 'Total Resources'].map(escapeCSV).join(','));
     const totalExpensesSum = (expenses || []).reduce((acc: number, curr: any) => acc + (curr.base_amount ?? curr.amount ?? 0), 0);
     lines.push([
       trip.name,
       baseCurrency,
       trip.start_date,
       trip.end_date,
+      memberNames.join('; ') || 'None',
       (timelineItems || []).length,
       formatCurrency(totalExpensesSum, baseCurrency),
       (resources || []).length
@@ -98,11 +107,20 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     // SECTION 3: EXPENSES
     lines.push('# EXPENSES');
-    lines.push(['No.', 'Date', 'Description', 'Original Amount', 'Currency', `Converted Amount (${baseCurrency})`, 'Linked Timeline Event', 'Receipt Photo URL'].map(escapeCSV).join(','));
+    lines.push(['No.', 'Date', 'Description', 'Original Amount', 'Currency', `Converted Amount (${baseCurrency})`, 'Paid By', 'Split Between', 'Linked Timeline Event', 'Receipt Photo URL'].map(escapeCSV).join(','));
     let expenseIdx = 1;
     for (const exp of (expenses || [])) {
       const expCurrency = exp.currency || baseCurrency;
       const receiptUrl = exp.image_key ? `${origin}/api/images/${exp.image_key}` : '';
+      let splitDesc = 'All participants';
+      if (exp.split_among) {
+        try {
+          const parsed = JSON.parse(exp.split_among);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            splitDesc = parsed.join('; ');
+          }
+        } catch (e) {}
+      }
       lines.push([
         expenseIdx++,
         exp.expense_date || '',
@@ -110,13 +128,47 @@ export const GET: APIRoute = async ({ request, url }) => {
         formatCurrency(exp.amount || 0, expCurrency),
         expCurrency,
         formatCurrency(exp.base_amount ?? exp.amount ?? 0, baseCurrency),
+        exp.paid_by || 'Unassigned',
+        splitDesc,
         exp.timeline_item_title || '',
         receiptUrl
       ].map(escapeCSV).join(','));
     }
     lines.push('');
 
-    // SECTION 4: RESOURCES HUB
+    // SECTION 4: BILL SPLITTING & SETTLEMENT PLAN
+    if (memberNames.length > 0) {
+      lines.push('# BILL SPLITTING & SETTLEMENT PLAN');
+      lines.push(['Total Attributed Expenses', formatCurrency(settlementSummary.totalAmount, baseCurrency), 'Average Per Person', formatCurrency(settlementSummary.averagePerPerson, baseCurrency)].map(escapeCSV).join(','));
+      lines.push('');
+      lines.push(['Member Name', `Total Paid (${baseCurrency})`, `Share Owed (${baseCurrency})`, `Net Balance (${baseCurrency})`, 'Status'].map(escapeCSV).join(','));
+      for (const b of settlementSummary.balances) {
+        const status = b.net > 0 ? 'To receive' : b.net < 0 ? 'To pay' : 'Settled';
+        lines.push([
+          b.name,
+          formatCurrency(b.paid, baseCurrency),
+          formatCurrency(b.share, baseCurrency),
+          formatCurrency(b.net, baseCurrency),
+          status
+        ].map(escapeCSV).join(','));
+      }
+      lines.push('');
+      lines.push(['Debtor (Pays)', 'Creditor (Receives)', `Transfer Amount (${baseCurrency})`].map(escapeCSV).join(','));
+      if (settlementSummary.transfers.length === 0) {
+        lines.push(['All balances are settled up', '', ''].map(escapeCSV).join(','));
+      } else {
+        for (const t of settlementSummary.transfers) {
+          lines.push([
+            t.from,
+            t.to,
+            formatCurrency(t.amount, baseCurrency)
+          ].map(escapeCSV).join(','));
+        }
+      }
+      lines.push('');
+    }
+
+    // SECTION 5: RESOURCES HUB
     lines.push('# RESOURCES HUB');
     lines.push(['No.', 'Type', 'Title', 'URL / Link', 'Notes', 'Created At'].map(escapeCSV).join(','));
     let resourceIdx = 1;

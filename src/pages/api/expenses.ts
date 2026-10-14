@@ -29,6 +29,16 @@ export const POST: APIRoute = async ({ request }) => {
   const proof_image = data.get('proof_image') as File | null;
   let image_key = data.get('image_key') as string | null;
 
+  const paid_by = (data.get('paid_by') as string)?.trim() || null;
+  const splitAmongAll = data.getAll('split_among').map((s) => String(s).trim()).filter(Boolean);
+  let split_among: string | null = null;
+  if (splitAmongAll.length > 0) {
+    split_among = JSON.stringify(splitAmongAll);
+  } else {
+    const rawSplit = (data.get('split_among') as string)?.trim();
+    if (rawSplit) split_among = rawSplit;
+  }
+
   // Fetch trip's base currency to automatically convert if different
   const trip = await db.prepare('SELECT base_currency FROM trips WHERE id = ?').bind(trip_id).first();
   const baseCurrency = (trip?.base_currency || 'VND').toUpperCase();
@@ -64,8 +74,8 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const { success } = await db.prepare(
-      'UPDATE expenses SET amount = ?, description = ?, expense_date = ?, timeline_item_id = ?, image_key = ?, currency = ?, exchange_rate = ?, base_amount = ? WHERE id = ?'
-    ).bind(amount, description, expense_date, timeline_item_id, image_key, currency, exchange_rate, base_amount, id).run();
+      'UPDATE expenses SET amount = ?, description = ?, expense_date = ?, timeline_item_id = ?, image_key = ?, currency = ?, exchange_rate = ?, base_amount = ?, paid_by = ?, split_among = ? WHERE id = ?'
+    ).bind(amount, description, expense_date, timeline_item_id, image_key, currency, exchange_rate, base_amount, paid_by, split_among, id).run();
 
     if (success) {
       return new Response(null, { status: 302, headers: { Location: `/trip/${trip_id}?tab=expenses` } });
@@ -78,8 +88,8 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const { success } = await db.prepare(
-    'INSERT INTO expenses (trip_id, timeline_item_id, amount, description, expense_date, image_key, currency, exchange_rate, base_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-  ).bind(trip_id, timeline_item_id, amount, description, expense_date, image_key, currency, exchange_rate, base_amount).run();
+    'INSERT INTO expenses (trip_id, timeline_item_id, amount, description, expense_date, image_key, currency, exchange_rate, base_amount, paid_by, split_among) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  ).bind(trip_id, timeline_item_id, amount, description, expense_date, image_key, currency, exchange_rate, base_amount, paid_by, split_among).run();
   
   if (success) {
     return new Response(null, { status: 302, headers: { Location: `/trip/${trip_id}?tab=expenses` } });

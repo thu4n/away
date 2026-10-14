@@ -32,7 +32,15 @@ CREATE TABLE expenses (
     image_key TEXT,
     currency TEXT NOT NULL DEFAULT 'VND',
     exchange_rate REAL NOT NULL DEFAULT 1.0,
-    base_amount REAL
+    base_amount REAL,
+    paid_by TEXT,
+    split_among TEXT
+);
+
+CREATE TABLE trip_members (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    trip_id INTEGER NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
+    name TEXT NOT NULL
 );
 
 CREATE TABLE trip_resources (
