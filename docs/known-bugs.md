@@ -109,3 +109,17 @@ For `HTMLInputElement` and `HTMLTextAreaElement`, the single cast usually works 
 ```html
 <form method="POST" action="/api/expenses" enctype="multipart/form-data">
 ```
+
+---
+
+## 9. Zsh: `no matches found: src/pages/trip/[id].astro`
+
+**When:** Running shell or git commands referencing paths with brackets (e.g., `git add src/pages/trip/[id].astro`).
+
+**Why:** In zsh, unquoted square brackets `[...]` are interpreted as glob character classes.
+
+**Fix:** Quote the path containing brackets:
+```bash
+git add 'src/pages/trip/[id].astro'
+```
+
