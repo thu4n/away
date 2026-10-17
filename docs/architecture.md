@@ -147,7 +147,7 @@ Group expenses are settled using a minimum cash flow algorithm (`src/utils/settl
 - **Timeline tab**: Day-based pill navigation, vertical timeline with event cards
 - **Expenses tab**: Summary banner with optional target budget progress bar (% spent, total spent, remaining budget, and over-budget warnings), filter pills (all/day), expense list supporting image proof modals, and Group Bill Splitting toolbar:
   - **Members modal**: Add/remove trip participants (supports comma-separated bulk entry).
-  - **Split Bill / Settle Up modal**: Overview cards, member filter to view specific debtor payment transfers, net balances per member, and step-by-step transfer settlement instructions.
+  - **Split Bill modal**: Overview cards, member filter to view specific debtor payment transfers, net balances per member, and step-by-step transfer settlement instructions.
   - One-click clipboard copy of full or filtered settlement breakdown.
 - **Resources tab**: Single-column flexible grid view for secure links, rendering embedded YouTube iframe players and Instagram posts
 - Bottom-sheet dialogs for adding/editing events and expenses (with adaptive 2-column or compact multi-select dropdown for split attribution based on member count)
